@@ -1,0 +1,21 @@
+<JavaCardConfiguration name="NaApp3">
+    <Config activeconfig="Debug">
+        <ConfigItem name="Debug" chipPack="JAVACOS">
+            <InstallConfig>
+                <PKG project_name="NaApp3" pkg_name="applet1" aid="11 22 33 44 55 66" major="1" minor="0">
+                    <APPLET aid="11 22 33 44 55 66 00" authority="" instanceaid="" parameter="" privileges="" index="16576" name="applet1" />
+                </PKG>
+                <PKG project_name="NaApp3" pkg_name="applet2" aid="22 33 44 55 66 77" major="1" minor="0">
+                    <APPLET aid="22 33 44 55 66 77 00" authority="" instanceaid="" parameter="" privileges="" index="-26208" name="applet2" />
+                </PKG>
+                <PKG project_name="NaApp3" pkg_name="applet3" aid="33 44 55 66 77 88" major="1" minor="0">
+                    <APPLET aid="33 44 55 66 77 88 00" authority="" instanceaid="" parameter="" privileges="" index="21008" name="applet3" />
+                </PKG>
+                <PKG project_name="NaApp3" pkg_name="applet4" aid="44 55 66 77 88 99" major="1" minor="0">
+                    <APPLET aid="44 55 66 77 88 99 00" authority="" instanceaid="" parameter="" privileges="" index="18376" name="applet4" />
+                </PKG>
+            </InstallConfig>
+            <ScriptConfig before_build="" after_build="" />
+        </ConfigItem>
+    </Config>
+</JavaCardConfiguration>

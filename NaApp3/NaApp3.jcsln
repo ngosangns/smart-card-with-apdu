@@ -1,0 +1,11 @@
+<JavaCardSolution name="NaApp3">
+    <JavaCardProjects>
+        <JavaCardProject path="NaApp3/NaApp3.jcproj" />
+    </JavaCardProjects>
+    <Build>
+        <BuildDependon />
+    </Build>
+    <Platform>
+        <ChipPack Name="JAVACOS" />
+    </Platform>
+</JavaCardSolution>
