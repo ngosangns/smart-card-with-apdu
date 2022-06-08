@@ -13,7 +13,7 @@
 <APPLET aid="44 55 66 77 88 99 00" instanceaid="" parameter="" authority="" privileges="" index="19216" name="applet4"/>
 </PKG>
 <PKG name="applet5" aid="55 66 77 88 99 00" major="1" minor="0">
-<APPLET aid="55 66 77 88 99 00 00" instanceaid="" parameter="" authority="" privileges="" index="-29008" name="applet5"/>
+<APPLET aid="55 66 77 88 99 00 00" instanceaid="" parameter="" authority="" privileges="" index="-28408" name="applet5"/>
 </PKG>
 </USER>
 <BuildPropertyConfig>

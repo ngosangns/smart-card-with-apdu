@@ -8,9 +8,10 @@ import javacardx.crypto.*;
 public class applet1 extends Applet
 {
 	private static byte[] duLieu;
-	private static byte[] pin = {'1', '2', '3', '4', '5', '6'};
+	private static byte[] pin;
 	private static short soLanNhapSai = 0;
 	private static short soLanNhapSaiToiDa = 3;
+	private static boolean theBiKhoa = false;
 	
 	// INS map
 	private static final byte INS_CHECK_INFO_EXIST         = (byte)0x13;
@@ -206,18 +207,22 @@ public class applet1 extends Applet
 	
 	private void taoDuLieu(APDU apdu, short len) {
 		byte[] buffer = apdu.getBuffer();
-		byte[] duLieuMoi = new byte[len];
+		short _pinLen = (short)buffer[ISO7816.OFFSET_CDATA];
+		byte[] _pin = new byte[_pinLen];
+		byte[] _duLieu = new byte[len];
         
-        JCSystem.beginTransaction();
-        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, duLieuMoi, (short)0, len);
-        duLieu = duLieuMoi;
-        JCSystem.commitTransaction();
+        Util.arrayCopy(buffer, (short)(ISO7816.OFFSET_CDATA + (short)1), _pin, (short)0, _pinLen);
+        Util.arrayCopy(buffer, (byte)(ISO7816.OFFSET_CDATA + (short)1 + _pinLen), _duLieu, (short)0, (short)(len - _pinLen));
         
         byte[] res = {(byte)0x00};
 		short resLen = (short)res.length;
 		
-        if(duLieuMoi != null && duLieuMoi.length == len) res[0] = (byte)0x01;
-        
+		if(_duLieu != null && _duLieu.length > 0 && _pin != null && _pin.length > 0) {
+			duLieu = _duLieu;
+			pin = _pin;
+			res[0] = (byte)0x01;
+		}
+
 		Util.arrayCopyNonAtomic(res, (short)0, buffer, (short)0, (short)resLen);
 		apdu.setOutgoingAndSend((short)0, (short)resLen);
 	}
@@ -231,11 +236,19 @@ public class applet1 extends Applet
 		byte[] res = {(byte)0x00};
 		short resLen = (short)res.length;
 		
-		if((short)len == (short)pin.length)
+		if(soLanNhapSai >= soLanNhapSaiToiDa) {
+			res[0] = 0x02;
+		}
+		else if(len == (short)pin.length) {
 			if(Util.arrayCompare(pin, (short)0, _pin, (short)0, len) == (byte)0x00) {
 				res = duLieu;
 				resLen = (short)res.length;
 			}
+		}
+        
+        if(resLen == 1 && res[0] == (byte)0x00) {
+	        soLanNhapSai++;
+        }
         
 		Util.arrayCopyNonAtomic(res, (short)0, buffer, (short)0, (short)resLen);
 		apdu.setOutgoingAndSend((short)0, (short)resLen);
