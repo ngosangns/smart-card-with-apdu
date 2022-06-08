@@ -192,7 +192,7 @@ public class applet5 extends Applet
             }
             else 
             {
-            	//RSA CRT Algorithm, need to create uninitialized private key and set the value of some parameters, such as P Q PQ DP DQ.执行解密运算前，设置私钥
+            	//RSA CRT Algorithm, need to create uninitialized private key and set the value of some parameters, such as P Q PQ DP DQ.
             	RSAPrivateCrtKey priCrtKey = (RSAPrivateCrtKey)KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_CRT_PRIVATE, keyLen, false);
                 priCrtKey.setP(rsaPriKey, (short)0, (short)(offset / 2));
                 priCrtKey.setQ(rsaPriKey, (short)(offset / 2), (short)(offset / 2));
@@ -215,7 +215,7 @@ public class applet5 extends Applet
 				{
 					//Generates decrypted output from all input data.
 					short outlen = rsaCipher.doFinal(buffer, ISO7816.OFFSET_CDATA, len, buffer, (short)0);
-					apdu.setOutgoingAndSend((short)0, outlen);	
+					apdu.setOutgoingAndSend((short)0, outlen);
 				}
             }
 		}        

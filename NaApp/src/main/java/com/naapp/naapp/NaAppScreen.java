@@ -280,6 +280,23 @@ public class NaAppScreen extends JFrame {
         add(capNhatDuLieuButton);
 
         themNutHuyKetNoiThe();
+        
+        JButton xoaDuLieuButton = new JButton("Xoá dữ liệu");
+        xoaDuLieuButton.setSize(150, 30);
+        xoaDuLieuButton.setLocation(325, 260);
+        xoaDuLieuButton.addActionListener((ActionEvent e) -> {
+            int input = JOptionPane.showConfirmDialog(null, 
+                "Xoá toàn bộ dữ liệu trên thẻ?", "Xác nhận", 
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+            if(input == 0) {
+                try {
+                    the.xoaDuLieu(the.thongTin.pin);
+                } catch(Exception ex) {
+                    JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi xoá dữ liệu", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+                }
+            }
+        });
+        
 
         veLai();
     }

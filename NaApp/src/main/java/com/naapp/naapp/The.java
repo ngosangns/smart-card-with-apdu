@@ -18,6 +18,18 @@ public class The {
     private static final byte INS_CHECK_INFO_EXIST         = (byte)0x13;
     private static final byte INS_TAO_DU_LIEU              = (byte)0x14;
     private static final byte INS_DANG_NHAP                = (byte)0x15;
+    private static final byte INS_XOA_DU_LIEU              = (byte)0x16;
+    
+    // Thu vien AES
+    private static final byte INS_SET_AES_KEY              = (byte)0x10;
+    private static final byte INS_SET_AES_ICV              = (byte)0x11;
+    private static final byte INS_DO_AES_CIPHER            = (byte)0x12;
+    
+    // Thu vien RSA
+    private static final byte INS_GEN_RSA_KEYPAIR          = (byte)0x30;
+    private static final byte INS_GET_RSA_PUBKEY           = (byte)0x31;
+    private static final byte INS_RSA_VERIFY               = (byte)0x36;
+    private static final byte INS_DO_RSA_CIPHER            = (byte)0x37;
 
     public The(byte[] _AID) {
         AID = _AID;
@@ -61,6 +73,9 @@ public class The {
     }
     
     public boolean taoDuLieu(ThongTin tt) throws Exception {
+        // Tạo RSA key pair
+        byte[] header = {(byte)0x80, INS_GEN_RSA_KEYPAIR, 0, 0};
+        
         // Tạo dữ liệu gửi qua applet
         byte[] ttBytes = SerializationUtils.serialize(tt);
         byte[] pinBytes = tt.pin.getBytes();
@@ -101,16 +116,28 @@ public class The {
             throw new Exception("Lỗi trạng thái");
         }
     }
+    
+    public void xoaDuLieu(String pin) throws Exception {
+        // Gửi request
+        byte[] header = {(byte)0x80, INS_XOA_DU_LIEU, (byte)0x00, (byte)0x00};
+        byte[] data = pin.getBytes();
+        APDUTraVe ketQua = guiAPDULenh(header, data, 1);
+
+        // Kiểm tra kết quả
+        if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
+            if(ketQua.data.length == 1 && ketQua.data[0] == (byte)0x00) {
+                throw new Exception("Có lỗi xảy ra khi xoá thẻ");
+            }
+        } else {
+            throw new Exception("Lỗi trạng thái");
+        }
+    }
 
     public APDUTraVe guiAPDULenh(byte[] header, byte[] data, int length) throws Exception {
-        try {
-            ResponseAPDU ketQua = channel.transmit(new CommandAPDU(header[0], header[1], header[2], header[3], data, length));
-            // Kiểm tra trạng thái
-            byte[] trangThai = {(byte) ketQua.getSW1(), (byte) ketQua.getSW2()};
-            return new APDUTraVe(trangThai, ketQua.getData());
-        } catch (CardException e) {
-            throw new Exception("Lỗi gửi dữ liệu");
-        }
+        ResponseAPDU ketQua = channel.transmit(new CommandAPDU(header[0], header[1], header[2], header[3], data, length));
+        // Kiểm tra trạng thái
+        byte[] trangThai = {(byte) ketQua.getSW1(), (byte) ketQua.getSW2()};
+        return new APDUTraVe(trangThai, ketQua.getData());
     }
 
     public void dongKetNoi() throws CardException {
