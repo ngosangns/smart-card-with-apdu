@@ -13,15 +13,15 @@ public class The {
 
     Card card;
     CardChannel channel;
+    
+    ThongTin thongTin;
 
     public static final byte[] TRANG_THAI_THANH_CONG = {(byte) 0x90, (byte) 0x00};
     
     // Bảng map INS
-    private static final byte INS_SET_AES_KEY              = (byte)0x10;
-    private static final byte INS_SET_AES_ICV              = (byte)0x11;
-    private static final byte INS_DO_AES_CIPHER            = (byte)0x12;
-    private static final byte CHECK_INFO_EXIST             = (byte)0x13;
-    private static final byte TAO_DU_LIEU                  = (byte)0x14;
+    private static final byte INS_CHECK_INFO_EXIST         = (byte)0x13;
+    private static final byte INS_TAO_DU_LIEU              = (byte)0x14;
+    private static final byte INS_DANG_NHAP                = (byte)0x15;
 
     public The(byte[] _AID) {
         AID = _AID;
@@ -58,7 +58,7 @@ public class The {
     
     public boolean kiemTraTonTaiDuLieuTrongThe() throws Exception {
         // Gửi request
-        byte[] testHeader = {(byte)0x80, CHECK_INFO_EXIST, (byte)0x00, (byte)0x00};
+        byte[] testHeader = {(byte)0x80, INS_CHECK_INFO_EXIST, (byte)0x00, (byte)0x00};
         byte[] data = {(byte)0x00};
         APDUTraVe ketQua = guiAPDULenh(testHeader, data, 1);
 
@@ -71,7 +71,7 @@ public class The {
     
     public boolean taoDuLieu(ThongTin tt) throws Exception {
         // Gửi request
-        byte[] testHeader = {(byte)0x80, TAO_DU_LIEU, (byte)0x00, (byte)0x00};
+        byte[] testHeader = {(byte)0x80, INS_TAO_DU_LIEU, (byte)0x00, (byte)0x00};
         byte[] data = SerializationUtils.serialize(tt);
         APDUTraVe ketQua = guiAPDULenh(testHeader, data, 1);
 
@@ -80,6 +80,24 @@ public class The {
         if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
             return ketQua.data[0] != (byte)0x00;
         return false;
+    }
+    
+    public ThongTin dangNhap(String pin) throws Exception {
+        // Gửi request
+        byte[] testHeader = {(byte)0x80, INS_DANG_NHAP, (byte)0x00, (byte)0x00};
+        byte[] data = pin.getBytes();
+        APDUTraVe ketQua = guiAPDULenh(testHeader, data, 1);
+
+        // Kiểm tra kết quả
+        if(ketQua == null) throw new Exception("Có lỗi xảy ra");
+        if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
+            if(ketQua.data.length == 1 && ketQua.data[0] == (byte)0x00) {
+                return null;
+            } else {
+                return (ThongTin)SerializationUtils.deserialize(ketQua.data);
+            }
+        }
+        return null;
     }
 
     public APDUTraVe guiAPDULenh(byte[] header, byte[] data, int length) {

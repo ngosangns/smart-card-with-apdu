@@ -12,6 +12,9 @@
 <PKG name="applet4" aid="44 55 66 77 88 99" major="1" minor="0">
 <APPLET aid="44 55 66 77 88 99 00" instanceaid="" parameter="" authority="" privileges="" index="19216" name="applet4"/>
 </PKG>
+<PKG name="applet5" aid="55 66 77 88 99 00" major="1" minor="0">
+<APPLET aid="55 66 77 88 99 00 00" instanceaid="" parameter="" authority="" privileges="" index="-28408" name="applet5"/>
+</PKG>
 </USER>
 <BuildPropertyConfig>
 <JCKit_Option>
@@ -38,7 +41,9 @@
 <directives/>
 </JavaCompilerOption>
 <Buildpaths>
-<ClasspathEntry/>
+<ClasspathEntry>
+<CPE_CONTAINER name="java_card_kit-2_2_2" kind="K_DEFAULT_SYSTEM_JCRE"/>
+</ClasspathEntry>
 <ConvertorBinDirPath/>
 </Buildpaths>
 <ConverterInfo ConverterKid="FTSAFE" ConverterName="ft222"/>
