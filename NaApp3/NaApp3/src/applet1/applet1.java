@@ -36,7 +36,6 @@ public class applet1 extends Applet
     private static final byte INS_GEN_RSA_KEYPAIR          = (byte)0x30;
     private static final byte INS_GET_RSA_PUBKEY           = (byte)0x31;
     private static final byte INS_RSA_VERIFY               = (byte)0x36;
-    private static final byte INS_DO_RSA_CIPHER            = (byte)0x37;
     private byte[] tempBuffer;
     private byte[] flags;
     private static final short OFF_INS    = (short)0;
@@ -78,13 +77,11 @@ public class applet1 extends Applet
         JCSystem.requestObjectDeletion();
     }
 
-	public static void install(byte[] bArray, short bOffset, byte bLength) 
-	{
+	public static void install(byte[] bArray, short bOffset, byte bLength) {
 		new applet1().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
 	}
 
-	public void process(APDU apdu)
-	{
+	public void process(APDU apdu) {
 		if (selectingApplet()) {
 			return;
 		}
@@ -102,62 +99,62 @@ public class applet1 extends Applet
         // Chi chap nhan CLA 0x80
         if (cla != (byte)0x80) ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
         
-        if(cla == INS_RSA_VERIFY) {
-	        rsaVerify(apdu, len);
-	        return;
+        boolean hasRouted = false;
+        switch(ins) {
+			case INS_RSA_VERIFY:
+				rsaVerify(apdu, len); hasRouted = true;
+				break;
         }
-        
-        // Xac thuc request
-        // if(coDuLieuTrongThe() && !daXacThuc) ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
-        
-		switch (ins) {
-			// Test
-			case (byte)0x00:
-				// Define a byte string
-				byte sendStr[] = {'A', 'B', 'C'};
-				short resLen = (short) sendStr.length;
-				// Copy character to APDU Buffer.
-				Util.arrayCopyNonAtomic(sendStr, (short)0, buf, (short)0, (short)resLen);
-				// Send the 'sendStr' string, the hex of JCRE sending data is the ASCII of sendStr.
-				apdu.setOutgoingAndSend((short)0, (short)resLen);
-				break;
-
-			case INS_KIEM_TRA_DU_LIEU_TON_TAI:
-				kiemTraDuLieuTonTai(apdu, len);
-				break;
-			case INS_TAO_DU_LIEU:
-				taoDuLieu(apdu, len);
-				break;
-			case INS_DANG_NHAP:
-				dangNhap(apdu, len);
-				break;
-			case INS_XOA_DU_LIEU:
-				xoaDuLieu(apdu, len);
-				break;
+		if(!hasRouted) {
+			// Xac thuc request
+			if(coDuLieuTrongThe() && !daXacThuc) ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
 			
-			// Thu vien AES
-			case INS_SET_AES_KEY:
-				setAesKey(apdu, len);
-				break;
-			case INS_SET_AES_ICV:
-				setAesICV(apdu, len);
-				break;
-			case INS_DO_AES_CIPHER:
-				doAesCipher(apdu, len);
-				break;
+			switch (ins) {
+				// Test
+				case (byte)0x00:
+					// Define a byte string
+					byte sendStr[] = {'A', 'B', 'C'};
+					short resLen = (short) sendStr.length;
+					// Copy character to APDU Buffer.
+					Util.arrayCopyNonAtomic(sendStr, (short)0, buf, (short)0, (short)resLen);
+					// Send the 'sendStr' string, the hex of JCRE sending data is the ASCII of sendStr.
+					apdu.setOutgoingAndSend((short)0, (short)resLen);
+					break;
+
+				case INS_KIEM_TRA_DU_LIEU_TON_TAI:
+					kiemTraDuLieuTonTai(apdu, len);
+					break;
+				case INS_TAO_DU_LIEU:
+					taoDuLieu(apdu, len);
+					break;
+				case INS_DANG_NHAP:
+					dangNhap(apdu, len);
+					break;
+				case INS_XOA_DU_LIEU:
+					xoaDuLieu(apdu, len);
+					break;
 				
-			// Thu vien RSA
-			case INS_GEN_RSA_KEYPAIR:
-				genRsaKeyPair(apdu, len);
-				break;
-			case INS_GET_RSA_PUBKEY:
-				getRsaPubKey(apdu, len);
-				break;
-			case INS_DO_RSA_CIPHER:
-				doRSACipher(apdu, len);
-				break;
-			default:
-				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+				// Thu vien AES
+				case INS_SET_AES_KEY:
+					setAesKey(apdu, len);
+					break;
+				case INS_SET_AES_ICV:
+					setAesICV(apdu, len);
+					break;
+				case INS_DO_AES_CIPHER:
+					doAesCipher(apdu, len);
+					break;
+					
+				// Thu vien RSA
+				case INS_GEN_RSA_KEYPAIR:
+					genRsaKeyPair(apdu, len);
+					break;
+				case INS_GET_RSA_PUBKEY:
+					getRsaPubKey(apdu, len);
+					break;
+				default:
+					ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+			}
 		}
 		
 		if(daXacThuc) daXacThuc = false;
@@ -244,32 +241,31 @@ public class applet1 extends Applet
     {
         byte[] buffer = apdu.getBuffer();
         byte keyLen = 0;
-        switch (buffer[ISO7816.OFFSET_P1])
-        {
-        case (byte)0x01:
-            if (len != 16) // The length of key is 16 bytes
-            {
-                ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-            }
-            keyLen = (byte)16;
-            break;
-        case (byte)0x02:
-            if (len != 24) //The length of key is 24 bytes
-            {
-                ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-            }
-            keyLen = (byte)24;
-            break;
-        case (byte)0x03:
-            if (len != 32) //The length of key is 32 bytes
-            {
-                ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-            }
-            keyLen = (byte)32;
-            break;
-        default:
-            ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
-            break;
+        switch (buffer[ISO7816.OFFSET_P1]) {
+			case (byte)0x01:
+				if (len != 16) // The length of key is 16 bytes
+				{
+					ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+				}
+				keyLen = (byte)16;
+				break;
+			case (byte)0x02:
+				if (len != 24) //The length of key is 24 bytes
+				{
+					ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+				}
+				keyLen = (byte)24;
+				break;
+			case (byte)0x03:
+				if (len != 32) //The length of key is 32 bytes
+				{
+					ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+				}
+				keyLen = (byte)32;
+				break;
+			default:
+				ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
+				break;
         }
 
         JCSystem.beginTransaction();
@@ -280,10 +276,8 @@ public class applet1 extends Applet
     }
 
 	// Set AES ICV, ICV is the initial vector
-    private void setAesICV(APDU apdu, short len)
-    {
-        if (len != 16)
-        {
+    private void setAesICV(APDU apdu, short len) {
+        if (len != 16) {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
         // Copy the incoming ICV value to the global variable 'aesICV'
@@ -291,23 +285,21 @@ public class applet1 extends Applet
     }
 
 	// Sets the Key data, and return the AESKey object. The plaintext length of input key data is 16/24/32 bytes.
-    private Key getAesKey()
-    {
+    private Key getAesKey() {
         Key tempAesKey = null;
-        switch (aesKeyLen)
-        {
-        case (byte)16:
-            tempAesKey = tempAesKey1;
-            break;
-        case (byte)24:
-            tempAesKey = tempAesKey2;
-            break;
-        case (byte)32:
-            tempAesKey = tempAesKey3;
-            break;
-        default:
-            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-            break;
+        switch (aesKeyLen) {
+			case (byte)16:
+				tempAesKey = tempAesKey1;
+				break;
+			case (byte)24:
+				tempAesKey = tempAesKey2;
+				break;
+			case (byte)32:
+				tempAesKey = tempAesKey3;
+				break;
+			default:
+				ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+				break;
         }
 		// Set the 'aesKey' key data value into the internal representation
         ((AESKey)tempAesKey).setKey(aesKey, (short)0);
@@ -315,11 +307,9 @@ public class applet1 extends Applet
     }
    
 	// AES algorithm encrypt and decrypt
-    private void doAesCipher(APDU apdu, short len)
-    {
+    private void doAesCipher(APDU apdu, short len) {
     	// The byte length to be encrypted/decrypted must be a multiple of 16
-        if (len <= 0 || len % 16 != 0)
-        {
+        if (len <= 0 || len % 16 != 0) {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
 
@@ -329,12 +319,10 @@ public class applet1 extends Applet
         Cipher cipher = buffer[ISO7816.OFFSET_P2] == (byte)0x00 ? aesEcbCipher : aesCbcCipher;
         // Initializes the 'cipher' object with the appropriate Key and algorithm specific parameters.
         // AES algorithms in CBC mode expect a 16-byte parameter value for the initial vector(IV)
-        if (cipher == aesCbcCipher)
-        {
+        if (cipher == aesCbcCipher) {
             cipher.init(key, mode, aesICV, (short)0, (short)16);
         }
-        else
-        {
+        else {
             cipher.init(key, mode);
         }
         // This method must be invoked to complete a cipher operation. Generates encrypted/decrypted output from all/last input data. 
@@ -347,109 +335,12 @@ public class applet1 extends Applet
 
 
 	// THU VIEN RSA
-
-	//RSA algorithm encrypt and decrypt
-	private void doRSACipher(APDU apdu, short len)
-    {
-    	byte[] buffer = apdu.getBuffer();
-        byte p1Tmp = buffer[ISO7816.OFFSET_P1];
-        boolean hasMoreCmd = (p1Tmp & 0x80) != 0;
-        boolean isEncrypt = (p1Tmp & 0x01) != 1;
-    	short keyLen = (p1Tmp & 0x08) == (byte)0x00 ? KeyBuilder.LENGTH_RSA_1024 : KeyBuilder.LENGTH_RSA_2048;
-    	short offset = (p1Tmp & 0x08) == (byte)0x00 ? (short)128 : (short)256;
-    	
-        if (len <= 0)
-        {
-            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-        }
-        //RSA encrypt, Public Key will be used
-        if (isEncrypt)
-		{
-			//Create uninitialized public key for signature and cipher algorithms.
-			RSAPublicKey pubKey = (RSAPublicKey)KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, keyLen, false);
-			pubKey.setModulus(rsaPubKey, (short)0, offset);
-			pubKey.setExponent(rsaPubKey, offset, (short)3);
-			if (buffer[ISO7816.OFFSET_P2] == 0x00)
-			{
-				//In multiple-part encryption/decryption operations, only the fist APDU command will be used.
-				rsaCipher.init(pubKey, Cipher.MODE_ENCRYPT); 
-			}
-			
-			if (hasMoreCmd)
-			{
-				//This method is intended for multiple-part encryption/decryption operations.
-				rsaCipher.update(buffer, ISO7816.OFFSET_CDATA, len, tempBuffer, (short)0);
-			}
-			else
-			{
-				//Generates encrypted output from all input data.
-				short outlen = rsaCipher.doFinal(buffer, ISO7816.OFFSET_CDATA, len, buffer, (short)0);
-				apdu.setOutgoingAndSend((short)0, outlen);	
-			}
-		}
-		else//RSA decrypt, Private Key will be used
-		{
-			if (!isRSAPriKeyCRT)
-            {
-            	//RSA Alogrithm, create uninitialized private key for decypt
-            	RSAPrivateKey priKey = (RSAPrivateKey)KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PRIVATE, keyLen, false);
-            	//Set the modulus value of the key.
-				priKey.setModulus(rsaPriKey, (short)0, offset);
-				//Sets the private exponent value of the key
-				priKey.setExponent(rsaPriKey, offset, offset);
-				if (buffer[ISO7816.OFFSET_P2] == 0x00)
-				{
-					//In multiple-part encryption/decryption operations, only the fist APDU command will be used.
-					rsaCipher.init(priKey, Cipher.MODE_DECRYPT);
-				}
-				if (hasMoreCmd)
-				{
-					//This method is intended for multiple-part encryption/decryption operations.
-					rsaCipher.update(buffer, ISO7816.OFFSET_CDATA, len, tempBuffer, (short)0);
-				}
-				else
-				{
-					short outlen = rsaCipher.doFinal(buffer, ISO7816.OFFSET_CDATA, len, buffer, (short)0);
-					apdu.setOutgoingAndSend((short)0, outlen);	
-				}
-            }
-            else 
-            {
-            	//RSA CRT Algorithm, need to create uninitialized private key and set the value of some parameters, such as P Q PQ DP DQ.
-            	RSAPrivateCrtKey priCrtKey = (RSAPrivateCrtKey)KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_CRT_PRIVATE, keyLen, false);
-                priCrtKey.setP(rsaPriKey, (short)0, (short)(offset / 2));
-                priCrtKey.setQ(rsaPriKey, (short)(offset / 2), (short)(offset / 2));
-                priCrtKey.setPQ(rsaPriKey, (short)offset, (short)(offset / 2));
-                priCrtKey.setDP1(rsaPriKey, (short)(offset + offset / 2), (short)(offset / 2));
-                priCrtKey.setDQ1(rsaPriKey, (short)(offset * 2), (short)(offset / 2));
-                
-                if (buffer[ISO7816.OFFSET_P2] == 0x00)
-				{
-					//Initializes the Cipher object with the appropriate Key. 
-					//In multiple-part encryption/decryption operations, only the fist APDU command will be used.
-					rsaCipher.init(priCrtKey, Cipher.MODE_DECRYPT);
-				}
-				if (hasMoreCmd)
-				{
-					//This method is intended for multiple-part encryption/decryption operations.
-					rsaCipher.update(buffer, ISO7816.OFFSET_CDATA, len, tempBuffer, (short)0);
-				}
-				else
-				{
-					//Generates decrypted output from all input data.
-					short outlen = rsaCipher.doFinal(buffer, ISO7816.OFFSET_CDATA, len, buffer, (short)0);
-					apdu.setOutgoingAndSend((short)0, outlen);
-				}
-            }
-		}        
-    }
     
-    //Get the value of RSA Public Key from the global variable 'rsaPubKey' 
+    // Get the value of RSA Public Key from the global variable 'rsaPubKey' 
     private void getRsaPubKey(APDU apdu, short len)
     {
         byte[] buffer = apdu.getBuffer();
-        if (rsaPubKeyLen == 0)
-        {
+        if (rsaPubKeyLen == 0) {
             ISOException.throwIt(SW_REFERENCE_DATA_NOT_FOUND);
         }
 
@@ -461,7 +352,7 @@ public class applet1 extends Applet
             apdu.setOutgoingAndSend((short)0,modLen);
             break;
         case 1:
-            //get public key E
+            // get public key E
             short eLen = (short)(rsaPubKeyLen - modLen);
             Util.arrayCopyNonAtomic(rsaPubKey,modLen,buffer,(short)0,eLen);
             apdu.setOutgoingAndSend((short)0,eLen);
@@ -492,29 +383,28 @@ public class applet1 extends Applet
         rsaPubKeyLen = 0;
         rsaPriKeyLen = 0;
         JCSystem.commitTransaction();
-        //Get a reference to the public key component of this 'keyPair' object.
+        // Get a reference to the public key component of this 'keyPair' object.
         RSAPublicKey pubKey = (RSAPublicKey)keyPair.getPublic();
         short pubKeyLen = 0;
-        //Store the RSA public key value in the global variable 'rsaPubKey', the public key contains modulo N and Exponent E
+        // Store the RSA public key value in the global variable 'rsaPubKey', the public key contains modulo N and Exponent E
         pubKeyLen += pubKey.getModulus(rsaPubKey, pubKeyLen);
         pubKeyLen += pubKey.getExponent(rsaPubKey, pubKeyLen);
 
         short priKeyLen = 0;
-        if (alg == KeyPair.ALG_RSA)
-        {
+        if (alg == KeyPair.ALG_RSA) {
         	isRSAPriKeyCRT = false;
-        	//Returns a reference to the private key component of this KeyPair object.
+        	// Returns a reference to the private key component of this KeyPair object.
             RSAPrivateKey priKey = (RSAPrivateKey)keyPair.getPrivate();
-            //RSA Algorithm,  the Private Key contains N and D, and store these parameters value in global variable 'rsaPriKey'.
+            // RSA Algorithm,  the Private Key contains N and D, and store these parameters value in global variable 'rsaPriKey'.
             priKeyLen += priKey.getModulus(rsaPriKey, priKeyLen);
             priKeyLen += priKey.getExponent(rsaPriKey, priKeyLen);
         }
-        else //RSA CRT
+        else // RSA CRT
         {
         	isRSAPriKeyCRT =  true;
-        	//The RSAPrivateCrtKey interface is used to sign data using the RSA algorithm in its Chinese Remainder Theorem form.
+        	// The RSAPrivateCrtKey interface is used to sign data using the RSA algorithm in its Chinese Remainder Theorem form.
             RSAPrivateCrtKey priKey = (RSAPrivateCrtKey)keyPair.getPrivate();
-            //RSA CRT Algorithm,  the Private Key contains P Q PQ DP and DQ, and store these parameters value in global variable 'rsaPriKey'.
+            // RSA CRT Algorithm,  the Private Key contains P Q PQ DP and DQ, and store these parameters value in global variable 'rsaPriKey'.
             priKeyLen += priKey.getP(rsaPriKey, priKeyLen);
             priKeyLen += priKey.getQ(rsaPriKey, priKeyLen);
             priKeyLen += priKey.getPQ(rsaPriKey, priKeyLen);
@@ -531,8 +421,7 @@ public class applet1 extends Applet
     }
     
     // RSA Signature and Verify
-    private void rsaVerify(APDU apdu, short len)
-    {
+    private void rsaVerify(APDU apdu, short len) {
         byte[] buffer = apdu.getBuffer();
         if (rsaPubKeyLen == 0) {
             ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
@@ -540,8 +429,7 @@ public class applet1 extends Applet
         boolean hasMoreCmd = (buffer[ISO7816.OFFSET_P1] & 0x80) != 0;
         short offset = ISO7816.OFFSET_CDATA;
         short modLen = rsaPubKeyLen > 256 ? (short)256 : (short)128;
-        if (buffer[ISO7816.OFFSET_P2] == 0) //first block
-        {
+        if (buffer[ISO7816.OFFSET_P2] == 0) {
             Key key;
             // Create uninitialized public keys for signature  algorithms.
             key = KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, (short)(modLen * 8), false);
@@ -559,8 +447,7 @@ public class applet1 extends Applet
             Util.setShort(flags, OFF_LEN, (short)0);
             JCSystem.requestObjectDeletion();
         }
-        else
-        {
+        else {
             if (flags[OFF_INS] != buffer[ISO7816.OFFSET_INS]
                     || (flags[OFF_P1] & 0x7f) != (buffer[ISO7816.OFFSET_P1] & 0x7f)
                     || (short)(flags[OFF_P2] & 0xff) != (short)((buffer[ISO7816.OFFSET_P2] & 0xff) - 1))
@@ -573,8 +460,7 @@ public class applet1 extends Applet
         }
 
         short sigLen = Util.getShort(flags, OFF_LEN);
-        if (sigLen < modLen)
-        {
+        if (sigLen < modLen) {
             short readLen = (short)(modLen - sigLen);
             if (readLen > len)
             {
@@ -586,24 +472,21 @@ public class applet1 extends Applet
             Util.setShort(flags, OFF_LEN, sigLen);
             offset += readLen;
         }
-        if (hasMoreCmd)
-        {
-            if (len > 0)
-            {
+        if (hasMoreCmd) {
+            if (len > 0) {
             	//Accumulates a signature of the input data. 
                 rsaSignature.update(buffer, offset, len);
             }
         }
-        else
-        {
-            if (sigLen != modLen)
-            {
+        else {
+            if (sigLen != modLen) {
                 Util.arrayFillNonAtomic(flags, (short)0, (short)flags.length, (byte)0);
                 ISOException.throwIt(ISO7816.SW_WRONG_DATA);
             }
             //Verify the signature of all/last input data against the passed in signature.
             boolean ret = rsaSignature.verify(buffer, offset, len, tempBuffer, (short)0, sigLen);
             Util.arrayFillNonAtomic(flags, (short)0, (short)flags.length, (byte)0);
+            daXacThuc = ret ? true : false;
             buffer[(short)0] = ret ? (byte)1 : (byte)0;
             apdu.setOutgoingAndSend((short)0, (short)1);
         }

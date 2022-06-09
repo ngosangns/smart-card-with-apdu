@@ -1,9 +1,15 @@
 package com.naapp.naapp;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import javax.smartcardio.*;
 import org.apache.commons.lang.SerializationUtils;
+import java.security.*;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.UUID;
+import javax.crypto.Cipher;
 
 public class The {
 
@@ -11,6 +17,8 @@ public class The {
     Card card;
     CardChannel channel;
     ThongTin thongTin;
+    String pin;
+    byte[] pubKeyRSA;
 
     public static final byte[] TRANG_THAI_THANH_CONG = {(byte) 0x90, (byte) 0x00};
     
@@ -29,13 +37,12 @@ public class The {
     private static final byte INS_GEN_RSA_KEYPAIR          = (byte)0x30;
     private static final byte INS_GET_RSA_PUBKEY           = (byte)0x31;
     private static final byte INS_RSA_VERIFY               = (byte)0x36;
-    private static final byte INS_DO_RSA_CIPHER            = (byte)0x37;
 
     public The(byte[] _AID) {
         AID = _AID;
     }
 
-    public boolean ketNoi() throws Exception {
+    public void ketNoi() throws Exception {
         // Hiển thị danh sách các thiết bị đầu cuối có sẵn
         TerminalFactory factory = TerminalFactory.getDefault();
         List<CardTerminal> terminals = factory.terminals().list();
@@ -51,12 +58,9 @@ public class The {
         APDUTraVe ketQua = guiAPDULenh(testHeader, data, 0);
 
         // Kiểm tra kết quả
-        if(ketQua != null) {
-            if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
-                return true;
-            }
+        if(!(ketQua != null && Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))) {
+            throw new Exception("Có lỗi xảy ra khi kết nối");
         }
-        return false;
     }
     
     public boolean kiemTraTonTaiDuLieuTrongThe() throws Exception {
@@ -72,36 +76,45 @@ public class The {
         return false;
     }
     
-    public boolean taoDuLieu(ThongTin tt) throws Exception {
+    public void taoDuLieu(ThongTin tt, String pin) throws Exception {
         // Tạo RSA key pair
         byte[] header = {(byte)0x80, INS_GEN_RSA_KEYPAIR, 0, 0};
+        APDUTraVe ketQua = guiAPDULenh(header, null, 0);
+        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
+            throw new Exception("Có lỗi xảy ra khi tạo mã khoá RSA");
+        
+        // Lấy ra public key của RSA
+        header = new byte[]{(byte)0x80, INS_GET_RSA_PUBKEY, 0, 0};
+        ketQua = guiAPDULenh(header, null, 128);
+        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
+            throw new Exception("Có lỗi xảy ra khi lấy public key RSA");
+        pubKeyRSA = ketQua.data;
         
         // Tạo dữ liệu gửi qua applet
         byte[] ttBytes = SerializationUtils.serialize(tt);
-        byte[] pinBytes = tt.pin.getBytes();
-        byte[] data = new byte[tt.pin.getBytes().length + ttBytes.length + 1];
+        byte[] pinBytes = pin.getBytes();
+        byte[] data = new byte[pin.getBytes().length + ttBytes.length + 1];
         data[0] = (byte)pinBytes.length;
         System.arraycopy(pinBytes, 0, data, 1, pinBytes.length);
         System.arraycopy(ttBytes, 0, data, pinBytes.length + 1, ttBytes.length);
         
-        // Gửi request
-        byte[] header = {(byte)0x80, INS_TAO_DU_LIEU, (byte)0x00, (byte)0x00};
-        APDUTraVe ketQua = guiAPDULenh(header, data, 1);
-
-        // Kiểm tra kết quả
-        if(ketQua == null) throw new Exception("Có lỗi xảy ra");
-        if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
-            return ketQua.data[0] != (byte)0x00;
-        return false;
+        header = new byte[]{(byte)0x80, INS_TAO_DU_LIEU, (byte)0x00, (byte)0x00};
+        ketQua = guiAPDULenh(header, data, 1);
+        
+        if(ketQua == null) throw new Exception("Có lỗi xảy ra khi tạo dữ liệu");
+        if (!(Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status) && ketQua.data[0] == (byte)0x01))
+            throw new Exception("Có lỗi xảy ra khi tạo dữ liệu");
     }
     
-    public void dangNhap(String pin) throws Exception {
+    public void dangNhap(String _pin) throws Exception {
+        xacThucKetNoi();
+        
         thongTin = null;
         
         // Gửi request
-        byte[] testHeader = {(byte)0x80, INS_DANG_NHAP, (byte)0x00, (byte)0x00};
-        byte[] data = pin.getBytes();
-        APDUTraVe ketQua = guiAPDULenh(testHeader, data, 1);
+        byte[] header = {(byte)0x80, INS_DANG_NHAP, (byte)0x00, (byte)0x00};
+        byte[] data = _pin.getBytes();
+        APDUTraVe ketQua = guiAPDULenh(header, data, 1);
 
         // Kiểm tra kết quả
         if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
@@ -111,13 +124,16 @@ public class The {
                 throw new Exception("Thẻ đã bị khoá");
             } else if(ketQua.data.length > 1) {
                 thongTin = (ThongTin)SerializationUtils.deserialize(ketQua.data);
+                pin = _pin;
             }
         } else {
             throw new Exception("Lỗi trạng thái");
         }
     }
     
-    public void xoaDuLieu(String pin) throws Exception {
+    public void xoaDuLieu() throws Exception {
+        xacThucKetNoi();
+        
         // Gửi request
         byte[] header = {(byte)0x80, INS_XOA_DU_LIEU, (byte)0x00, (byte)0x00};
         byte[] data = pin.getBytes();
@@ -125,12 +141,10 @@ public class The {
 
         // Kiểm tra kết quả
         if (Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
-            if(ketQua.data.length == 1 && ketQua.data[0] == (byte)0x00) {
+            if(!(ketQua.data.length == 1 && ketQua.data[0] == (byte)0x01))
                 throw new Exception("Có lỗi xảy ra khi xoá thẻ");
-            }
-        } else {
+        } else
             throw new Exception("Lỗi trạng thái");
-        }
     }
 
     public APDUTraVe guiAPDULenh(byte[] header, byte[] data, int length) throws Exception {
@@ -138,6 +152,25 @@ public class The {
         // Kiểm tra trạng thái
         byte[] trangThai = {(byte) ketQua.getSW1(), (byte) ketQua.getSW2()};
         return new APDUTraVe(trangThai, ketQua.getData());
+    }
+    
+    private void xacThucKetNoi() throws Exception {
+        // Tạo một chuỗi ngẫu nhiên và mã hoá nó với public key của RSA
+        // Sau đó gửi qua applet để xác thực với private key
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(pubKeyRSA);
+        Cipher encryptCipher = Cipher.getInstance("RSA");
+        encryptCipher.init(Cipher.ENCRYPT_MODE, keyFactory.generatePublic(publicKeySpec));
+        
+        byte[] randomMessage = UUID.randomUUID().toString().getBytes();
+        byte[] encryptedMessage = encryptCipher.doFinal(randomMessage);
+        
+        byte[] header = new byte[]{(byte)0x80, INS_RSA_VERIFY, 0, 0};
+        APDUTraVe ketQua = guiAPDULenh(header, encryptedMessage, 1);
+        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
+            throw new Exception("Có lỗi xảy ra khi xác thực RSA");
+        if (ketQua.data[0] == 0)
+            throw new Exception("Có lỗi xảy ra khi xác thực RSA");
     }
 
     public void dongKetNoi() throws CardException {

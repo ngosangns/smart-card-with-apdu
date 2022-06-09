@@ -66,23 +66,14 @@ public class NaAppScreen extends JFrame {
         b.setBounds(300, 280, 200, 40);
         b.addActionListener((ActionEvent e) -> {
             try {
-                if (the.ketNoi()) {
-                    try {
-                        if (the.kiemTraTonTaiDuLieuTrongThe()) {
-                            manHinhNhapMaPin(null);
-                        } else {
-                            manHinhYeuCauTaoDuLieuChoThe();
-                        }
-                    } catch (Exception ex) {
-                        thongBao.setForeground(Color.red);
-                        thongBao.setText("Có lỗi xảy ra khi kiểm tra dữ liệu thẻ");
-                    }
-                } else {
-                    throw new Exception("");
-                }
+                the.ketNoi();
+                if (the.kiemTraTonTaiDuLieuTrongThe())
+                    manHinhNhapMaPin(null);
+                else
+                    manHinhYeuCauTaoDuLieuChoThe();
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
-                thongBao.setText("Có lỗi xảy ra khi kết nối đến thẻ");
+                thongBao.setText(ex.getMessage());
             }
         });
         add(b);
@@ -123,6 +114,7 @@ public class NaAppScreen extends JFrame {
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
+                ex.printStackTrace();
             }
         });
         add(dangNhapButton);
@@ -196,30 +188,27 @@ public class NaAppScreen extends JFrame {
         taoDuLieuButton.setSize(150, 30);
         taoDuLieuButton.setLocation(325, 260);
         taoDuLieuButton.addActionListener((ActionEvent e) -> {
-            String hoTen = hoTenField.getText();
-            String pin = pinField.getText();
+            String _hoTen = hoTenField.getText();
+            String _pin = pinField.getText();
 
             // Kiểm tra dữ liệu
-            if (hoTen.equals("")) {
+            if (_hoTen.equals("")) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText("Tên không được để trống");
                 return;
             }
-            if (pin.equals("")) {
+            if (_pin.equals("")) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText("Mã PIN không được để trống");
                 return;
             }
 
             try {
-                if (the.taoDuLieu(new ThongTin(hoTen, pin))) {
-                    manHinhNhapMaPin(tt == null ? "Tạo dữ liệu thành công" : "Cập nhật dữ liệu thành công");
-                } else {
-                    thongBao.setForeground(Color.red);
-                    thongBao.setText(tt == null ? "Tạo dữ liệu thất bại" : "Cập nhật dữ liệu thất bại");
-                }
+                the.taoDuLieu(new ThongTin(_hoTen), _pin);
+                manHinhNhapMaPin(tt == null ? "Tạo dữ liệu thành công" : "Cập nhật dữ liệu thành công");
             } catch (Exception ex) {
-                Logger.getLogger(NaAppScreen.class.getName()).log(Level.SEVERE, null, ex);
+                thongBao.setForeground(Color.red);
+                thongBao.setText(ex.getMessage());
             }
         });
         add(taoDuLieuButton);
@@ -237,10 +226,11 @@ public class NaAppScreen extends JFrame {
         });
         add(quayLaiButton);
 
+        // Đưa dữ liệu vào field nếu tồn tại
         if (tt != null) {
             hoTenField.setText(tt.hoTen);
-            pinField.setText(tt.pin);
         }
+        if(the.pin != null) pinField.setText(the.pin);
 
         veLai();
     }
@@ -290,7 +280,7 @@ public class NaAppScreen extends JFrame {
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if(input == 0) {
                 try {
-                    the.xoaDuLieu(the.thongTin.pin);
+                    the.xoaDuLieu();
                 } catch(Exception ex) {
                     JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi xoá dữ liệu", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
                 }
