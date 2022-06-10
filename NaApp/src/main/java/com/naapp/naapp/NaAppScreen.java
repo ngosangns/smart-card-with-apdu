@@ -3,8 +3,6 @@ package com.naapp.naapp;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -207,6 +205,7 @@ public class NaAppScreen extends JFrame {
                 the.taoDuLieu(new ThongTin(_hoTen), _pin);
                 manHinhNhapMaPin(tt == null ? "Tạo dữ liệu thành công" : "Cập nhật dữ liệu thành công");
             } catch (Exception ex) {
+                ex.printStackTrace();
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
             }
