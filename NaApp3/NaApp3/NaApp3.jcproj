@@ -3,18 +3,6 @@
 <PKG name="applet1" aid="11 22 33 44 55 66" major="1" minor="0">
 <APPLET aid="11 22 33 44 55 66 00" instanceaid="" parameter="" authority="" privileges="" index="16936" name="applet1"/>
 </PKG>
-<PKG name="applet2" aid="22 33 44 55 66 77" major="1" minor="0">
-<APPLET aid="22 33 44 55 66 77 00" instanceaid="" parameter="" authority="" privileges="" index="-26088" name="applet2"/>
-</PKG>
-<PKG name="applet3" aid="33 44 55 66 77 88" major="1" minor="0">
-<APPLET aid="33 44 55 66 77 88 00" instanceaid="" parameter="" authority="" privileges="" index="21128" name="applet3"/>
-</PKG>
-<PKG name="applet4" aid="44 55 66 77 88 99" major="1" minor="0">
-<APPLET aid="44 55 66 77 88 99 00" instanceaid="" parameter="" authority="" privileges="" index="19216" name="applet4"/>
-</PKG>
-<PKG name="applet5" aid="55 66 77 88 99 00" major="1" minor="0">
-<APPLET aid="55 66 77 88 99 00 00" instanceaid="" parameter="" authority="" privileges="" index="-28408" name="applet5"/>
-</PKG>
 </USER>
 <BuildPropertyConfig>
 <JCKit_Option>

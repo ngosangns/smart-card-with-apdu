@@ -3,6 +3,8 @@ package com.naapp.naapp;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -65,10 +67,11 @@ public class NaAppScreen extends JFrame {
         b.addActionListener((ActionEvent e) -> {
             try {
                 the.ketNoi();
-                if (the.kiemTraTonTaiDuLieuTrongThe())
+                if (the.kiemTraTonTaiDuLieuTrongThe()) {
                     manHinhNhapMaPin(null);
-                else
+                } else {
                     manHinhYeuCauTaoDuLieuChoThe();
+                }
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
@@ -88,6 +91,15 @@ public class NaAppScreen extends JFrame {
         add(tieuDe);
 
         JTextField pinField = new JPasswordField();
+        pinField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (pinField.getText().length() >= the.boiSoAES) // limit to `boiSoAES` characters
+                {
+                    e.consume();
+                }
+            }
+        });
         pinField.setSize(200, 30);
         pinField.setLocation(300, 320);
         add(pinField);
@@ -112,7 +124,6 @@ public class NaAppScreen extends JFrame {
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
-                ex.printStackTrace();
             }
         });
         add(dangNhapButton);
@@ -142,6 +153,8 @@ public class NaAppScreen extends JFrame {
             manHinhTaoDuLieu(null);
         });
         add(taoDuLieuButton);
+        
+        themNutHuyKetNoiThe();
 
         veLai();
     }
@@ -172,6 +185,15 @@ public class NaAppScreen extends JFrame {
         pinLabel.setLocation(300, 160);
         add(pinLabel);
         JTextField pinField = new JTextField();
+        pinField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (pinField.getText().length() >= the.boiSoAES) // limit to `boiSoAES` characters
+                {
+                    e.consume();
+                }
+            }
+        });
         pinField.setSize(200, 30);
         pinField.setLocation(300, 190);
         add(pinField);
@@ -202,10 +224,12 @@ public class NaAppScreen extends JFrame {
             }
 
             try {
-                the.taoDuLieu(new ThongTin(_hoTen), _pin);
+                if(tt == null)
+                    the.taoDuLieu(new ThongTin(_hoTen), _pin);
+                else
+                    the.capNhatDuLieu(new ThongTin(_hoTen, tt.id), _pin);
                 manHinhNhapMaPin(tt == null ? "Tạo dữ liệu thành công" : "Cập nhật dữ liệu thành công");
             } catch (Exception ex) {
-                ex.printStackTrace();
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
             }
@@ -228,8 +252,13 @@ public class NaAppScreen extends JFrame {
         // Đưa dữ liệu vào field nếu tồn tại
         if (tt != null) {
             hoTenField.setText(tt.hoTen);
+        } else {
+            hoTenField.setText("");
         }
-        if(the.pin != null) pinField.setText(the.pin);
+        if (the.pin != null) {
+            pinField.setText(the.pin);
+            pinField.setText("");
+        }
 
         veLai();
     }
@@ -244,48 +273,59 @@ public class NaAppScreen extends JFrame {
         tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD));
         add(tieuDe);
 
+        // ID
+        JLabel idLabel = new JLabel("ID");
+        idLabel.setSize(200, 40);
+        idLabel.setLocation(300, 100);
+        add(idLabel);
+        JLabel idField = new JLabel(the.thongTin.id);
+        idField.setSize(200, 30);
+        idField.setLocation(300, 130);
+        add(idField);
+        
         // Họ và tên
         JLabel hoVaTenLabel = new JLabel("Họ và tên");
         hoVaTenLabel.setSize(200, 40);
-        hoVaTenLabel.setLocation(300, 100);
+        hoVaTenLabel.setLocation(300, 170);
         add(hoVaTenLabel);
         JLabel hoTenField = new JLabel(the.thongTin.hoTen);
         hoTenField.setSize(200, 30);
-        hoTenField.setLocation(300, 130);
+        hoTenField.setLocation(300, 200);
         add(hoTenField);
 
         JLabel thongBao = new JLabel("", JLabel.CENTER);
         thongBao.setSize(200, 40);
-        thongBao.setLocation(300, 220);
+        thongBao.setLocation(300, 360);
         add(thongBao);
 
         // Nút cập nhật dữ liệu
         JButton capNhatDuLieuButton = new JButton("Cập nhật dữ liệu");
         capNhatDuLieuButton.setSize(150, 30);
-        capNhatDuLieuButton.setLocation(325, 260);
+        capNhatDuLieuButton.setLocation(325, 400);
         capNhatDuLieuButton.addActionListener((ActionEvent e) -> {
             manHinhTaoDuLieu(the.thongTin);
         });
         add(capNhatDuLieuButton);
 
         themNutHuyKetNoiThe();
-        
+
         JButton xoaDuLieuButton = new JButton("Xoá dữ liệu");
         xoaDuLieuButton.setSize(150, 30);
-        xoaDuLieuButton.setLocation(325, 260);
+        xoaDuLieuButton.setLocation(325, 430);
         xoaDuLieuButton.addActionListener((ActionEvent e) -> {
-            int input = JOptionPane.showConfirmDialog(null, 
-                "Xoá toàn bộ dữ liệu trên thẻ?", "Xác nhận", 
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
-            if(input == 0) {
+            int input = JOptionPane.showConfirmDialog(null,
+                    "Xoá toàn bộ dữ liệu trên thẻ?", "Xác nhận",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+            if (input == 0) {
                 try {
                     the.xoaDuLieu();
-                } catch(Exception ex) {
+                    manHinhYeuCauTaoDuLieuChoThe();
+                } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi xoá dữ liệu", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
                 }
             }
         });
-        
+        add(xoaDuLieuButton);
 
         veLai();
     }
