@@ -8,20 +8,30 @@ import javacardx.apdu.ExtendedLength;
 
 public class applet1 extends Applet implements ExtendedLength {
 	private static byte[] duLieuDaMaHoa;
+	private static final short boiSoAES = 16;
+	
+	// Gioi han so lan nhap PIN cua nguoi dung
 	private static short soLanNhapSai = 0;
 	private static short soLanNhapSaiToiDa = 3;
 	private static boolean theBiKhoa = false;
-	private static final short boiSoAES = 16;
+	
+	// ID cua the
 	private static byte[] id;
 	private static final short doDaiId = 16;
+	
+	// Su dung de xac thuc cac hanh dong cua admin
+	private static final byte[] adminCode = {(byte)0x09, (byte)0x08, (byte)0x02, (byte)0x00};
 	
 	// Dung luong toi da cua data trong buffer
 	// Cung la dung luong toi da cua kieu du lieu `short`
 	private static final short MAX_LENGTH = (short)(0x7FFF);
+	
+	// Su dung de nhan va gui thong tin co dung luong lon
 	private static byte[] tempExtendData;
 	private static short tempExtendLen;
 	
 	// INS map
+	private static final byte INS_ADMIN_MO_KHOA_THE        = (byte)0x11;
 	private static final byte INS_LAY_ID                   = (byte)0x12;
 	private static final byte INS_KIEM_TRA_DU_LIEU_TON_TAI = (byte)0x13;
     private static final byte INS_TAO_DU_LIEU              = (byte)0x14;
@@ -125,6 +135,10 @@ public class applet1 extends Applet implements ExtendedLength {
 				getRsaPubKey(apdu, len);
 				hasRouted = true;
 				break;
+			case INS_ADMIN_MO_KHOA_THE:
+				adminMoKhoaThe(apdu, len);
+				hasRouted = true;
+				break;
         }
         
         if(hasRouted) return;
@@ -167,6 +181,30 @@ public class applet1 extends Applet implements ExtendedLength {
 					ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
 			}
 		}
+	}
+	
+	private void adminMoKhoaThe(APDU apdu, short len) {
+		kiemTraAdminCode(apdu, len);
+		
+		// Mo khoa the
+		theBiKhoa = false;
+		soLanNhapSai = 0;
+	}
+	
+	private void kiemTraAdminCode(APDU apdu, short len) {
+		byte[] buffer = apdu.getBuffer();
+		
+		// Kiem tra do dai ky tu
+		if(len != (short)adminCode.length)
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+			
+		// Lay adminCode tu buffer
+		byte[] _adminCode = new byte[len];
+		Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, _adminCode, (short)0, len);
+		
+		// Kiem tra adminCode
+		if(Util.arrayCompare(_adminCode, (short)0, adminCode, (short) 0, len) != 0)
+			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
 	}
 	
 	private void layIdCuaThe(APDU apdu, short len) {

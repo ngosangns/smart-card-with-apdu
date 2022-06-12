@@ -1,5 +1,7 @@
 package com.naapp.naapp;
 
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -11,8 +13,14 @@ public class NaApp {
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ex) {
         }
         
-        QuanLyThe.loadKhoThe();
-
+        // Load dữ liệu thẻ đã lưu trên máy
+        try {
+            QuanLyThe.loadKhoThe();
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi load dữ liệu", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+            System.exit(0);
+        }
+        
         NaAppScreen f = new NaAppScreen();
         f.manHinhKetNoiDenThe();
     }

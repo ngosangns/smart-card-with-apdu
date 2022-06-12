@@ -21,8 +21,12 @@ public class NaAPDU {
     public static Card card;
     public static CardChannel channel;
     public static The theDangKetNoi;
+    
+    // Su dung de xac thuc cac hanh dong cua admin
+    private static final byte[] adminCode = {(byte)0x09, (byte)0x08, (byte)0x02, (byte)0x00};
 
     // Bảng map INS
+    private static final byte INS_ADMIN_MO_KHOA_THE = (byte)0x11;
     private static final byte INS_LAY_ID = (byte) 0x12;
     private static final byte INS_CHECK_INFO_EXIST = (byte) 0x13;
     private static final byte INS_TAO_DU_LIEU = (byte) 0x14;
@@ -225,7 +229,7 @@ public class NaAPDU {
 
     // Tạo một chuỗi ngẫu nhiên và gửi nó cho applet ký bằng private key và trả về signature
     // Sau đó verify signature đó. Nếu đúng thì thẻ an toàn để kết nối với hệ thống
-    private static void xacThucThe() throws Exception {
+    public static void xacThucThe() throws Exception {
         kiemTraKhongKetNoi();
 
         if (theDangKetNoi.pubKeyRSA == null) {
@@ -254,6 +258,20 @@ public class NaAPDU {
         sig.update(randomMessage);
         if (!sig.verify(ketQua.data)) {
             throw new Exception("Thẻ không được xác thực");
+        }
+    }
+    
+    public static void adminMoKhoaThe() throws Exception {
+        kiemTraKhongKetNoi();
+        
+        // Gửi request
+        byte[] header = {(byte) 0x80, INS_ADMIN_MO_KHOA_THE, (byte) 0x00, (byte) 0x00};
+        byte[] data = adminCode;
+        APDUTraVe ketQua = guiAPDULenh(header, data, 1);
+
+        // Kiểm tra kết quả
+        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
+            throw new Exception("Có lỗi xảy ra khi mở khoá thẻ");
         }
     }
 
