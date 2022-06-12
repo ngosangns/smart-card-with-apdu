@@ -39,14 +39,15 @@ public class NaAppScreen extends JFrame {
         super();
 
         quanLyThe = new QuanLyThe();
-        the = new The();
-        quanLyThe.themThe(the);
+        quanLyThe.themThe(new The());
+        the = quanLyThe.layTheDauTien();
 
-        setSize(800, 600);
-        setLayout(null);
-        setTitle("NaApp");
-        setResizable(false);
-        setLocationRelativeTo(null);
+        // Cài đặt cho Jrame
+        setSize(800, 600); // Kích thước
+        setLayout(null); // Bố trí
+        setTitle("NaApp"); // Tiêu đề
+        setResizable(false); // Chặn người dùng thay đổi kích thước
+        setLocationRelativeTo(null); // Xuất hiện ở giữa
 
         // Khi tắt frame sẽ huỷ kết nối thẻ (nếu có) và kết thúc chương trình
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -250,7 +251,11 @@ public class NaAppScreen extends JFrame {
                     tempAvatar = themHinhAnhVaoPanel(tempAvatar, avatarPreviewImagePanel);
                     avatarButton.setText("Hình: " + avatarFile.getName());
                 } else {
+                    tempAvatar = null;
                     avatarButton.setText("Chọn hình đại diện");
+                    avatarPreviewImagePanel.removeAll();
+                    avatarPreviewImagePanel.revalidate();
+                    avatarPreviewImagePanel.repaint();
                 }
             } catch (IOException ex) {
                 avatarButton.setText("Có lỗi xảy ra khi chọn hình");
@@ -320,6 +325,7 @@ public class NaAppScreen extends JFrame {
         add(quayLaiButton);
 
         // Đưa dữ liệu vào field nếu tồn tại
+        tempAvatar = null;
         if (tt != null) {
             hoTenField.setText(tt.hoTen);
             // Lấy dữ liệu hình ảnh (nếu có)

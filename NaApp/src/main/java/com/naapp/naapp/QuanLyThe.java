@@ -24,6 +24,13 @@ public class QuanLyThe {
         }
         return null;
     }
+    
+    public The layTheDauTien() {
+        if(!khoThe.isEmpty()) {
+            return khoThe.get(0);
+        }
+        return null;
+    }
 
     public void xoaThe(String _id) {
         int index = 0;
