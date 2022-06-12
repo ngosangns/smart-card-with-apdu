@@ -22,6 +22,7 @@ public class applet1 extends Applet implements ExtendedLength {
 	private static short tempExtendLen;
 	
 	// INS map
+	private static final byte INS_LAY_ID                   = (byte)0x12;
 	private static final byte INS_KIEM_TRA_DU_LIEU_TON_TAI = (byte)0x13;
     private static final byte INS_TAO_DU_LIEU              = (byte)0x14;
     private static final byte INS_DANG_NHAP                = (byte)0x15;
@@ -112,6 +113,10 @@ public class applet1 extends Applet implements ExtendedLength {
 				apdu.setOutgoingAndSend((short)0, (short)resLen);
 				hasRouted = true;
 				break;
+			case INS_LAY_ID:
+				layIdCuaThe(apdu, len);
+				hasRouted = true;
+				break;
 			case INS_KIEM_TRA_DU_LIEU_TON_TAI:
 				kiemTraDuLieuTonTai(apdu, len);
 				hasRouted = true;
@@ -162,6 +167,13 @@ public class applet1 extends Applet implements ExtendedLength {
 					ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
 			}
 		}
+	}
+	
+	private void layIdCuaThe(APDU apdu, short len) {
+		byte[] buffer = apdu.getBuffer();
+		short resLen = doDaiId;
+		Util.arrayCopy(id, (short)0, buffer, (short)0, resLen);
+		apdu.setOutgoingAndSend((short)0, (short)resLen);
 	}
 	
 	private boolean coDuLieuTrongThe() {

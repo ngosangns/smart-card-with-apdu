@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
-import javax.smartcardio.CardException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -31,16 +30,11 @@ import org.apache.commons.io.FileUtils;
 
 public class NaAppScreen extends JFrame {
 
-    private final QuanLyThe quanLyThe;
-    private The the;
     private byte[] tempAvatar;
+    private The the;
 
     public NaAppScreen() {
         super();
-
-        quanLyThe = new QuanLyThe();
-        quanLyThe.themThe(new The());
-        the = quanLyThe.layTheDauTien();
 
         // Cài đặt cho Jrame
         setSize(800, 600); // Kích thước
@@ -54,17 +48,8 @@ public class NaAppScreen extends JFrame {
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                try {
-                    try {
-                        the.dongKetNoi();
-                    } catch (CardException exx) {
-                    }
-                    System.exit(0);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null,
-                            new JLabel("Có lỗi xảy ra khi đóng ứng dụng", JLabel.CENTER),
-                            "Lỗi", JOptionPane.PLAIN_MESSAGE);
-                }
+                NaAPDU.dongKetNoi();
+                System.exit(0);
             }
         });
 
@@ -84,13 +69,15 @@ public class NaAppScreen extends JFrame {
         b.setBounds(300, 280, 200, 40);
         b.addActionListener((ActionEvent e) -> {
             try {
-                the.ketNoi();
-                if (the.kiemTraTonTaiDuLieuTrongThe()) {
+                NaAPDU.ketNoiThe(QuanLyThe.AID);
+                the = NaAPDU.theDangKetNoi;
+                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
                     manHinhNhapMaPin(null);
                 } else {
                     manHinhYeuCauTaoDuLieuChoThe();
                 }
             } catch (Exception ex) {
+                ex.printStackTrace();
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
             }
@@ -112,8 +99,8 @@ public class NaAppScreen extends JFrame {
         pinField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
-                if (pinField.getText().length() >= the.boiSoAES) // limit to `boiSoAES` characters
-                {
+                // limit to `boiSoAES` length
+                if (pinField.getText().length() >= NaAPDU.boiSoAES) {
                     e.consume();
                 }
             }
@@ -132,12 +119,7 @@ public class NaAppScreen extends JFrame {
         dangNhapButton.addActionListener((ActionEvent e) -> {
             String pin = pinField.getText();
             try {
-                the.dangNhap(pin);
-                if (the.thongTin == null) {
-                    thongBao.setForeground(Color.red);
-                    thongBao.setText("Có lỗi xảy ra");
-                    return;
-                }
+                NaAPDU.dangNhap(pin);
                 manHinhXemDuLieu(null);
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
@@ -206,7 +188,7 @@ public class NaAppScreen extends JFrame {
         pinField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
-                if (pinField.getText().length() >= the.boiSoAES) // limit to `boiSoAES` characters
+                if (pinField.getText().length() >= NaAPDU.boiSoAES) // limit to `boiSoAES` characters
                 {
                     e.consume();
                 }
@@ -253,7 +235,7 @@ public class NaAppScreen extends JFrame {
                 } else {
                     // Nếu là tạo dữ liệu thì sẽ xoá hình cũ đi nếu không
                     // chọn hình mới
-                    if(tt == null) {
+                    if (tt == null) {
                         tempAvatar = null;
                         avatarButton.setText("Chọn hình đại diện");
                         avatarPreviewImagePanel.removeAll();
@@ -301,12 +283,12 @@ public class NaAppScreen extends JFrame {
                 if (tt == null) {
                     ThongTin _tt = new ThongTin(_hoTen);
                     _tt.avatar = tempAvatar;
-                    the.taoDuLieu(_tt, _pin);
+                    NaAPDU.taoDuLieu(_tt, _pin);
                     manHinhNhapMaPin("Tạo dữ liệu thành công");
                 } else {
                     ThongTin _tt = new ThongTin(_hoTen, tt.id);
                     _tt.avatar = tempAvatar;
-                    the.capNhatDuLieu(_tt, _pin);
+                    NaAPDU.capNhatDuLieu(_tt, _pin);
                     manHinhXemDuLieu("Cập nhật dữ liệu thành công");
                 }
             } catch (Exception ex) {
@@ -472,7 +454,7 @@ public class NaAppScreen extends JFrame {
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if (input == 0) {
                 try {
-                    the.xoaDuLieu();
+                    NaAPDU.xoaDuLieu();
                     manHinhYeuCauTaoDuLieuChoThe();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi xoá dữ liệu", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
@@ -531,13 +513,8 @@ public class NaAppScreen extends JFrame {
         JButton huyKetNoiButton = new JButton("Huỷ kết nối thẻ");
         huyKetNoiButton.setBounds(10, 525, 120, 32);
         huyKetNoiButton.addActionListener((ActionEvent e) -> {
-            try {
-                the.dongKetNoi();
-                the.thongTin = null;
-                manHinhKetNoiDenThe();
-            } catch (CardException ex) {
-                JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi huỷ kết nối đến thẻ", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
-            }
+            NaAPDU.dongKetNoi();
+            manHinhKetNoiDenThe();
         });
         add(huyKetNoiButton);
     }
