@@ -1,33 +1,34 @@
 package com.naapp.naapp;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class QuanLyThe {
-    private List<The> khoThe = new ArrayList<The>();
+
+    private final List<The> khoThe = new ArrayList<>();
+
     public QuanLyThe() {
     }
-    
+
     public void themThe(The the) {
         khoThe.add(the);
     }
-    
-    public The layThe(byte[] AID) {
+
+    public The layThe(String _id) {
         int index = 0;
         for (The item : khoThe) {
-            if(Arrays.equals(item.AID, AID)){
+            if (item.id.equals(_id)) {
                 return item;
             }
             index++;
         }
         return null;
     }
-    
-    public void xoaThe(byte[] AID) {
+
+    public void xoaThe(String _id) {
         int index = 0;
         for (The item : khoThe) {
-            if(Arrays.equals(item.AID, AID)) {
+            if (item.id.equals(_id)) {
                 khoThe.remove(index);
                 break;
             }

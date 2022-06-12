@@ -6,6 +6,7 @@ import java.util.UUID;
 public class ThongTin implements Serializable {
     public String hoTen;
     public String id;
+    public byte[] avatar;
     public ThongTin(String _hoTen) {
         hoTen = _hoTen;
         id = UUID.randomUUID().toString();

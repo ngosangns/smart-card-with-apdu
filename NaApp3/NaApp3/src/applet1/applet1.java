@@ -4,9 +4,9 @@ import javacard.framework.*;
 import javacard.security.KeyBuilder;
 import javacard.security.*;
 import javacardx.crypto.*;
+import javacardx.apdu.ExtendedLength;
 
-public class applet1 extends Applet
-{
+public class applet1 extends Applet implements ExtendedLength {
 	private static byte[] duLieuDaMaHoa;
 	private static short soLanNhapSai = 0;
 	private static short soLanNhapSaiToiDa = 3;
@@ -35,7 +35,6 @@ public class applet1 extends Applet
     private static final short OFF_INS    = (short)0;
     private static final short OFF_P1     = (short)1;
     private static final short OFF_P2     = (short)2;
-    // private static final short OFF_LEN    = (short)3;
     private static final short FLAGS_SIZE = (short)5;
     private static final byte ID_N   = 0;
     private static final byte ID_D   = 1;
@@ -49,7 +48,6 @@ public class applet1 extends Applet
     private byte[] rsaPriKey;
     private short rsaPriKeyLen;
     private boolean isRSAPriKeyCRT;
-    // private Cipher rsaCipher;
     private Signature rsaSignature;
 	private static final short SW_REFERENCE_DATA_NOT_FOUND = (short)0x6A88;
     
@@ -63,7 +61,6 @@ public class applet1 extends Applet
         rsaPriKeyLen = 0;
         isRSAPriKeyCRT = false;
         rsaSignature = null;
-        // rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
         JCSystem.requestObjectDeletion();
     }
 
@@ -83,8 +80,8 @@ public class applet1 extends Applet
         // byte p1 = buf[ISO7816.OFFSET_P1];
         // byte p2 = buf[ISO7816.OFFSET_P2];
         // short p1p2 = Util.makeShort(p1, p2);
-        short len = apdu.setIncomingAndReceive();
         // short lc = apdu.getIncomingLength();
+        short len = apdu.setIncomingAndReceive();
         
         // Chi chap nhan CLA 0x80
         if (cla != (byte)0x80) ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
@@ -171,7 +168,6 @@ public class applet1 extends Applet
 	}
 	
 	private void taoDuLieu(APDU apdu, short len) {
-		byte[] buffer = apdu.getBuffer();
 		layDuLieuTuBuffer(apdu, len);
 		
 		// Lay ra PIN va du lieu tu buffer
@@ -181,18 +177,12 @@ public class applet1 extends Applet
         Util.arrayCopy(tempExtendData, (short)0, _pin, (short)0, _pinLen);
         Util.arrayCopy(tempExtendData, (short)0, _duLieu, (short)0, tempExtendLen);
         
+        // Kiem tra dau vao
         kiemTraBoiSo(_pin, boiSoAES);
         kiemTraBoiSo(_duLieu, boiSoAES);
-        
-        byte[] res = {(byte)0x00};
-		short resLen = (short)res.length;
 		
+		// Ma hoa du lieu
 		duLieuDaMaHoa = doAesCipherComponent(_duLieu, _pin, (byte)0);
-		res[0] = (byte)0x01;
-
-		Util.arrayCopyNonAtomic(res, (short)0, buffer, (short)0, (short)resLen);
-		JCSystem.requestObjectDeletion();
-		apdu.setOutgoingAndSend((short)0, (short)resLen);
 	}
 	
 	private void dangNhap(APDU apdu, short len) {
@@ -203,9 +193,6 @@ public class applet1 extends Applet
         
         kiemTraBoiSo(_pin, boiSoAES);
 		
-		byte[] res = {(byte)0x00};
-		short resLen = (short)res.length;
-		
 		// Gia dinh ma PIN sai va tang so lan nhap sai
 		soLanNhapSai++;
 		if(soLanNhapSai >= soLanNhapSaiToiDa)
@@ -213,21 +200,18 @@ public class applet1 extends Applet
         	
 		xacThucPIN(_pin);
 		
-		byte[] _duLieuBanRo = doAesCipherComponent(duLieuDaMaHoa, _pin, (byte)0x01);
-		res = _duLieuBanRo;
-		resLen = (short)res.length;
-		
 		// Neu code chay toi doan nay thi da xac thuc dung
 		// => reset so lan nhap sai & trang thai khoa the
 		soLanNhapSai = 0;
 		theBiKhoa = false;
 		
+		byte[] _duLieuBanRo = doAesCipherComponent(duLieuDaMaHoa, _pin, (byte)0x01);
+		byte[] res = _duLieuBanRo;
+		short resLen = (short)res.length;
+		
 		apdu.setOutgoing();
 		apdu.setOutgoingLength(resLen);
 		apdu.sendBytesLong(res, (short)0, resLen);
-        
-		// Util.arrayCopyNonAtomic(res, (short)0, buffer, (short)0, (short)resLen);
-		// apdu.setOutgoingAndSend((short)0, (short)resLen);
 	}
 	
 	private void capNhatDuLieu(APDU apdu, short len) {
@@ -437,7 +421,7 @@ public class applet1 extends Applet
         switch (id)
         {
         case ID_N:
-            //RSA private key N
+            // RSA private key N
             if (isRSAPriKeyCRT) {
                 return (short)0;
             }
@@ -448,7 +432,7 @@ public class applet1 extends Applet
             if (isRSAPriKeyCRT) {
                 return (short)0;
             }
-            //RSA private key D
+            // RSA private key D
             readOff = modLen;
             readLen = modLen;
             break;
@@ -512,7 +496,7 @@ public class applet1 extends Applet
             Key key;
             if (!isRSAPriKeyCRT) {
                 short ret;
-                //Creates uninitialized private keys for signature algorithms.
+                // Creates uninitialized private keys for signature algorithms.
                 key = KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PRIVATE, (short)(rsaPriKeyLen / 2 * 8), false);
                 ret = getRsaPriKeyComponent(ID_N, tempBuffer, (short)0);
                 ((RSAPrivateKey)key).setModulus(tempBuffer, (short)0, ret);
@@ -521,7 +505,7 @@ public class applet1 extends Applet
             }
             else {
                 short ret;
-                //Creates uninitialized private keys for signature algorithms.
+                // Creates uninitialized private keys for signature algorithms.
                 key = KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_CRT_PRIVATE, (short)(rsaPriKeyLen / 5 * 16), false);
                 ret = getRsaPriKeyComponent(ID_P, tempBuffer, (short)0);
                 ((RSAPrivateCrtKey)key).setP(tempBuffer, (short)0, ret);
@@ -537,7 +521,7 @@ public class applet1 extends Applet
 			// Creates a Signature object instance of the ALG_RSA_SHA_PKCS1 algorithm.
             rsaSignature = Signature.getInstance(Signature.ALG_RSA_SHA_PKCS1, false);
             JCSystem.requestObjectDeletion();
-			//Initializ the Signature object.
+			// Initializ the Signature object.
             rsaSignature.init(key, Signature.MODE_SIGN);
 
             Util.arrayCopyNonAtomic(buffer, ISO7816.OFFSET_INS, flags, OFF_INS, (short)3);

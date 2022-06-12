@@ -7,11 +7,12 @@ import javax.smartcardio.*;
 import org.apache.commons.lang.SerializationUtils;
 import java.security.*;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.UUID;
 import javax.crypto.Cipher;
 
 public class The {
 
-    public byte[] AID;
+    public String id;
     Card card;
     CardChannel channel;
     ThongTin thongTin;
@@ -25,18 +26,18 @@ public class The {
 
     // Bảng map INS
     private static final byte INS_CHECK_INFO_EXIST = (byte) 0x13;
-    private static final byte INS_TAO_DU_LIEU      = (byte) 0x14;
-    private static final byte INS_DANG_NHAP        = (byte) 0x15;
-    private static final byte INS_XOA_DU_LIEU      = (byte) 0x16;
+    private static final byte INS_TAO_DU_LIEU = (byte) 0x14;
+    private static final byte INS_DANG_NHAP = (byte) 0x15;
+    private static final byte INS_XOA_DU_LIEU = (byte) 0x16;
     private static final byte INS_CAP_NHAT_DU_LIEU = (byte) 0x17;
 
     // Thu vien RSA
-    private static final byte INS_GEN_RSA_KEYPAIR  = (byte) 0x30;
-    private static final byte INS_GET_RSA_PUBKEY   = (byte) 0x31;
-    private static final byte INS_RSA_SIGN         = (byte) 0x35;
+    private static final byte INS_GEN_RSA_KEYPAIR = (byte) 0x30;
+    private static final byte INS_GET_RSA_PUBKEY = (byte) 0x31;
+    private static final byte INS_RSA_SIGN = (byte) 0x35;
 
-    public The(byte[] _AID) {
-        AID = _AID;
+    public The() {
+        id = UUID.randomUUID().toString();
     }
 
     public void ketNoi() throws Exception {
@@ -51,8 +52,7 @@ public class The {
 
         // Gửi request chọn applet dựa theo AID
         byte[] testHeader = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
-        byte[] data = AID;
-        APDUTraVe ketQua = guiAPDULenh(testHeader, data, 0);
+        APDUTraVe ketQua = guiAPDULenh(testHeader, null, 0);
 
         // Kiểm tra kết quả
         if (!(ketQua != null && Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))) {
@@ -115,15 +115,16 @@ public class The {
         System.arraycopy(ttBytes, 0, data, paddedPIN.length, ttBytes.length);
 
         header = new byte[]{(byte) 0x80, INS_TAO_DU_LIEU, (byte) 0x00, (byte) 0x00};
-        ketQua = guiAPDULenh(header, data, 1);
+        ketQua = guiAPDULenh(header, data, 0);
 
-        if (!(Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status) && ketQua.data[0] == (byte) 0x01))
+        if (!(Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))) {
             throw new Exception("Có lỗi xảy ra khi tạo dữ liệu");
+        }
 
         pin = _pin;
         thongTin = tt;
     }
-    
+
     public void capNhatDuLieu(ThongTin tt, String _pin) throws Exception {
         // Gửi thông tin qua applet
         byte[] ttBytes = pad(SerializationUtils.serialize(tt), boiSoAES);
@@ -137,8 +138,9 @@ public class The {
         byte[] header = new byte[]{(byte) 0x80, INS_CAP_NHAT_DU_LIEU, (byte) 0x00, (byte) 0x00};
         APDUTraVe ketQua = guiAPDULenh(header, data, 1);
 
-        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
+        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
             throw new Exception("Có lỗi xảy ra khi cập nhật dữ liệu");
+        }
 
         pin = _pin;
         thongTin = tt;
@@ -169,11 +171,10 @@ public class The {
                     byte[] _tt = new byte[_ttLen];
                     System.arraycopy(ketQua.data, _paddedPIN.length, _tt, 0, _ttLen);
                     thongTin = (ThongTin) SerializationUtils.deserialize(_tt);
+                    pin = _pin;
                 } catch (Exception e) {
                     throw new Exception("Mã PIN không đúng");
                 }
-
-                pin = _pin;
             }
         } else {
             throw new Exception("Lỗi trạng thái hoặc mã PIN không đúng");
@@ -189,9 +190,10 @@ public class The {
         APDUTraVe ketQua = guiAPDULenh(header, data, 1);
 
         // Kiểm tra kết quả
-        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))
+        if (!Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status)) {
             throw new Exception("Có lỗi xảy ra khi xoá thông tin trên thẻ");
-       
+        }
+
         thongTin = null;
         pin = null;
     }
@@ -202,11 +204,11 @@ public class The {
 
         // Parse kết quả trả về
         byte[] trangThai = {(byte) ketQua.getSW1(), (byte) ketQua.getSW2()};
-        
+
         if (Arrays.equals(TRANG_THAI_KHOA_THE, trangThai)) {
             throw new Exception("Thẻ đã bị khoá");
         }
-        
+
         return new APDUTraVe(trangThai, ketQua.getData());
     }
 
