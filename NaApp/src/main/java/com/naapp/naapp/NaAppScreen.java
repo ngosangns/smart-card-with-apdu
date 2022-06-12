@@ -138,7 +138,7 @@ public class NaAppScreen extends JFrame {
                     thongBao.setText("Có lỗi xảy ra");
                     return;
                 }
-                manHinhXemDuLieu();
+                manHinhXemDuLieu(null);
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
@@ -251,11 +251,15 @@ public class NaAppScreen extends JFrame {
                     tempAvatar = themHinhAnhVaoPanel(tempAvatar, avatarPreviewImagePanel);
                     avatarButton.setText("Hình: " + avatarFile.getName());
                 } else {
-                    tempAvatar = null;
-                    avatarButton.setText("Chọn hình đại diện");
-                    avatarPreviewImagePanel.removeAll();
-                    avatarPreviewImagePanel.revalidate();
-                    avatarPreviewImagePanel.repaint();
+                    // Nếu là tạo dữ liệu thì sẽ xoá hình cũ đi nếu không
+                    // chọn hình mới
+                    if(tt == null) {
+                        tempAvatar = null;
+                        avatarButton.setText("Chọn hình đại diện");
+                        avatarPreviewImagePanel.removeAll();
+                        avatarPreviewImagePanel.revalidate();
+                        avatarPreviewImagePanel.repaint();
+                    }
                 }
             } catch (IOException ex) {
                 avatarButton.setText("Có lỗi xảy ra khi chọn hình");
@@ -298,12 +302,13 @@ public class NaAppScreen extends JFrame {
                     ThongTin _tt = new ThongTin(_hoTen);
                     _tt.avatar = tempAvatar;
                     the.taoDuLieu(_tt, _pin);
+                    manHinhNhapMaPin("Tạo dữ liệu thành công");
                 } else {
                     ThongTin _tt = new ThongTin(_hoTen, tt.id);
                     _tt.avatar = tempAvatar;
                     the.capNhatDuLieu(_tt, _pin);
+                    manHinhXemDuLieu("Cập nhật dữ liệu thành công");
                 }
-                manHinhNhapMaPin(tt == null ? "Tạo dữ liệu thành công" : "Cập nhật dữ liệu thành công");
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
@@ -319,7 +324,7 @@ public class NaAppScreen extends JFrame {
             if (tt == null) {
                 manHinhYeuCauTaoDuLieuChoThe();
             } else {
-                manHinhXemDuLieu();
+                manHinhXemDuLieu(null);
             }
         });
         add(quayLaiButton);
@@ -350,7 +355,7 @@ public class NaAppScreen extends JFrame {
         veLai();
     }
 
-    public void manHinhXemDuLieu() {
+    public void manHinhXemDuLieu(String _thongBao) {
         xoaManHinh();
 
         // Tiêu đề
@@ -386,7 +391,9 @@ public class NaAppScreen extends JFrame {
         avatarLabel.setLocation(530, 100);
         add(avatarLabel);
 
-        JLabel thongBao = new JLabel("", JLabel.CENTER);
+        // Thông báo
+        JLabel thongBao = new JLabel(_thongBao != null ? _thongBao : "", JLabel.CENTER);
+        thongBao.setForeground(Color.blue);
         thongBao.setSize(200, 40);
         thongBao.setLocation(300, 360);
         add(thongBao);

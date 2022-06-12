@@ -11,7 +11,9 @@ public class applet1 extends Applet implements ExtendedLength {
 	private static short soLanNhapSai = 0;
 	private static short soLanNhapSaiToiDa = 3;
 	private static boolean theBiKhoa = false;
-	private static short boiSoAES = 16;
+	private static final short boiSoAES = 16;
+	private static byte[] id;
+	private static final short doDaiId = 16;
 	
 	// Dung luong toi da cua data trong buffer
 	// Cung la dung luong toi da cua kieu du lieu `short`
@@ -52,6 +54,15 @@ public class applet1 extends Applet implements ExtendedLength {
 	private static final short SW_REFERENCE_DATA_NOT_FOUND = (short)0x6A88;
     
     public applet1() {
+    	// Tao ID ngau nhien cho the
+    	RandomData randomData = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
+        byte[] randomBuf = JCSystem.makeTransientByteArray((short)1, JCSystem.CLEAR_ON_DESELECT);
+        id = new byte[doDaiId];
+        for(short i = 0; i < doDaiId; i++) {
+        	randomData.generateData(randomBuf, (short)0, (short)1);
+	        id[i] = randomBuf[0];
+        }
+    	
         // Thu vien RSA
         tempBuffer = JCSystem.makeTransientByteArray((short)256, JCSystem.CLEAR_ON_DESELECT);
         flags = JCSystem.makeTransientByteArray(FLAGS_SIZE, JCSystem.CLEAR_ON_DESELECT);

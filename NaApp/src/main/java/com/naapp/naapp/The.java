@@ -12,7 +12,10 @@ import javax.crypto.Cipher;
 
 public class The {
 
+    // ID riêng của mỗi thẻ
     public String id;
+    // AID của loại thẻ này
+    public byte[] AID = {(byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66};
     Card card;
     CardChannel channel;
     ThongTin thongTin;
@@ -51,8 +54,8 @@ public class The {
         channel = card.getBasicChannel();
 
         // Gửi request chọn applet dựa theo AID
-        byte[] testHeader = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
-        APDUTraVe ketQua = guiAPDULenh(testHeader, null, 0);
+        byte[] header = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
+        APDUTraVe ketQua = guiAPDULenh(header, AID, 0);
 
         // Kiểm tra kết quả
         if (!(ketQua != null && Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))) {
