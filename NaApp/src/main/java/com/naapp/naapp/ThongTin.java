@@ -8,6 +8,11 @@ public class ThongTin implements Serializable {
     public String id;
     public byte[] avatar;
     public long soTien = 0;
+    public String maSoPhong;
+    public String namSinh;
+    public String soDienThoai;
+    
+    public static int doDaiPin = 6;
     public ThongTin(String _hoTen) {
         hoTen = _hoTen;
         id = UUID.randomUUID().toString();

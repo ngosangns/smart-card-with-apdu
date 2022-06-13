@@ -59,6 +59,7 @@ public class NaAPDU {
         byte[] header = {(byte) 0x00, (byte) 0xA4, (byte) 0x04, (byte) 0x00};
         APDUTraVe ketQua = guiAPDULenh(header, AID, 0);
         if (!(ketQua != null && Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))) {
+            dongKetNoi();
             throw new Exception("Có lỗi xảy ra khi kết nối");
         }
 
@@ -66,6 +67,7 @@ public class NaAPDU {
         header = new byte[]{(byte) 0x80, INS_LAY_ID, (byte) 0x00, (byte) 0x00};
         ketQua = guiAPDULenh(header, null, 1);
         if (!(ketQua != null && Arrays.equals(TRANG_THAI_THANH_CONG, ketQua.status))) {
+            dongKetNoi();
             throw new Exception("Có lỗi xảy ra khi kết nối");
         }
         byte[] _id = ketQua.data;

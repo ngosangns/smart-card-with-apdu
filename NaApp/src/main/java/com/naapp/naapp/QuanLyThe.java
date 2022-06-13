@@ -65,16 +65,25 @@ public class QuanLyThe implements Serializable {
     }
 
     public static void loadKhoThe() throws Exception {
-        File _f = new File(duongDanLuuKhoThe);
-        // Kiểm tra file lưu dữ liệu có tồn tại chưa
-        // Nếu có thì load dữ liệu kho thẻ từ file này
-        if (_f.exists() && !_f.isDirectory()) {
-            byte[] _bytes = Files.readAllBytes(_f.toPath());
+        try {
+            File _f = new File(duongDanLuuKhoThe);
+            // Kiểm tra file lưu dữ liệu có tồn tại chưa
+            // Nếu có thì load dữ liệu kho thẻ từ file này
+            if (_f.exists() && !_f.isDirectory()) {
+                byte[] _bytes = Files.readAllBytes(_f.toPath());
 
-            try (ObjectInputStream _ois = new ObjectInputStream(new ByteArrayInputStream(_bytes))) {
-                List<The> _khoThe = (ArrayList<The>) _ois.readObject();
-                QuanLyThe.khoThe = _khoThe;
+                try ( ObjectInputStream _ois = new ObjectInputStream(new ByteArrayInputStream(_bytes))) {
+                    List<The> _khoThe = (ArrayList<The>) _ois.readObject();
+                    QuanLyThe.khoThe = _khoThe;
+                }
             }
+        } catch (Exception ex) {
+            try {
+                File f = new File(duongDanLuuKhoThe);
+                f.delete();
+            } catch (Exception e) {
+            }
+            throw new Exception("Có lỗi xảy ra khi load dữ liệu. Vui lòng khởi động lại.");
         }
     }
 }

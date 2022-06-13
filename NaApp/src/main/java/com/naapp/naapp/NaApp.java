@@ -17,7 +17,7 @@ public class NaApp {
         try {
             QuanLyThe.loadKhoThe();
         } catch(Exception e) {
-            JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi load dữ liệu", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showMessageDialog(null, new JLabel("Có lỗi xảy ra khi load dữ liệu. Vui lòng khởi động lại", JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
             System.exit(0);
         }
         

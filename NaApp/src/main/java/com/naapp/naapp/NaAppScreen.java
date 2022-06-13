@@ -7,12 +7,9 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,8 +29,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import org.apache.commons.io.FileUtils;
 
 public class NaAppScreen extends JFrame {
@@ -151,7 +146,7 @@ public class NaAppScreen extends JFrame {
             @Override
             public void keyTyped(KeyEvent e) {
                 // limit to `boiSoAES` length
-                if (pinField.getText().length() >= NaAPDU.boiSoAES) {
+                if (pinField.getText().length() >= ThongTin.doDaiPin) {
                     e.consume();
                 }
             }
@@ -217,63 +212,93 @@ public class NaAppScreen extends JFrame {
         // Tiêu đề
         JLabel tieuDe = new JLabel(tt == null ? "Tạo dữ liệu cho thẻ" : "Cập nhật dữ liệu", JLabel.CENTER);
         tieuDe.setSize(400, 40);
-        tieuDe.setLocation(200, 50);
+        tieuDe.setLocation(200, 30);
         tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD));
         add(tieuDe);
 
         // Họ và tên
-        JLabel hoVaTenLabel = new JLabel("Họ và tên");
+        JLabel hoVaTenLabel = new JLabel("Họ và tên (*)");
         hoVaTenLabel.setSize(200, 40);
-        hoVaTenLabel.setLocation(300, 100);
+        hoVaTenLabel.setLocation(300, 60);
         add(hoVaTenLabel);
         JTextField hoTenField = new JTextField();
         hoTenField.setSize(200, 30);
-        hoTenField.setLocation(300, 130);
+        hoTenField.setLocation(300, 90);
         add(hoTenField);
 
         // PIN
-        JLabel pinLabel = new JLabel("Nhập mã PIN");
+        JLabel pinLabel = new JLabel("Nhập mã PIN (*)");
         pinLabel.setSize(200, 40);
-        pinLabel.setLocation(300, 160);
+        pinLabel.setLocation(300, 120);
         add(pinLabel);
         JTextField pinField = new JTextField();
         pinField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
-                if (pinField.getText().length() >= NaAPDU.boiSoAES) // limit to `boiSoAES` characters
+                if (pinField.getText().length() >= ThongTin.doDaiPin) // limit to `boiSoAES` characters
                 {
                     e.consume();
                 }
             }
         });
         pinField.setSize(200, 30);
-        pinField.setLocation(300, 190);
+        pinField.setLocation(300, 150);
         add(pinField);
 
         // Số tiền
-        JLabel soTienLabel = new JLabel("Số tiền");
+        JLabel soTienLabel = new JLabel("Số tiền (*)");
         soTienLabel.setSize(200, 40);
-        soTienLabel.setLocation(300, 220);
+        soTienLabel.setLocation(300, 180);
         add(soTienLabel);
         JFormattedTextField soTienField = new JFormattedTextField(NumberFormat.getNumberInstance());
         soTienField.setSize(200, 30);
-        soTienField.setLocation(300, 250);
+        soTienField.setLocation(300, 210);
         soTienField.setValue(0);
         add(soTienField);
+        
+        // Năm sinh
+        JLabel namSinhLabel = new JLabel("Năm sinh");
+        namSinhLabel.setSize(200, 40);
+        namSinhLabel.setLocation(300, 240);
+        add(namSinhLabel);
+        JTextField namSinhField = new JTextField();
+        namSinhField.setSize(200, 30);
+        namSinhField.setLocation(300, 270);
+        add(namSinhField);
+        
+        // Số phòng
+        JLabel maSoPhongLabel = new JLabel("Mã số phòng");
+        maSoPhongLabel.setSize(200, 40);
+        maSoPhongLabel.setLocation(300, 300);
+        add(maSoPhongLabel);
+        JTextField maSoPhongField = new JTextField();
+        maSoPhongField.setSize(200, 30);
+        maSoPhongField.setLocation(300, 330);
+        add(maSoPhongField);
+        
+        // Số điện thoại
+        JLabel soDienThoaiLabel = new JLabel("Số điện thoại");
+        soDienThoaiLabel.setSize(200, 40);
+        soDienThoaiLabel.setLocation(300, 360);
+        add(soDienThoaiLabel);
+        JTextField soDienThoaiField = new JTextField();
+        soDienThoaiField.setSize(200, 30);
+        soDienThoaiField.setLocation(300, 390);
+        add(soDienThoaiField);
 
         // Hình đại diện
-        JLabel avatarLabel = new JLabel("Hình đại diện");
+        JLabel avatarLabel = new JLabel("Hình đại diện (*)");
         avatarLabel.setSize(200, 40);
-        avatarLabel.setLocation(530, 100);
+        avatarLabel.setLocation(530, 60);
         add(avatarLabel);
         JButton avatarButton = new JButton("Chọn hình đại diện");
         avatarButton.setSize(200, 30);
-        avatarButton.setLocation(530, 130);
+        avatarButton.setLocation(530, 90);
 
         // Thêm panel cho hình đại diện
         JPanel avatarPreviewImagePanel = new JPanel();
         avatarPreviewImagePanel.setSize(200, 400);
-        avatarPreviewImagePanel.setLocation(530, 160);
+        avatarPreviewImagePanel.setLocation(530, 120);
         add(avatarPreviewImagePanel);
 
         // Cài đặt hành động cho nút chọn hình đại diện
@@ -312,19 +337,23 @@ public class NaAppScreen extends JFrame {
         });
         add(avatarButton);
 
+        // Thông báo
         JLabel thongBao = new JLabel("", JLabel.CENTER);
         thongBao.setSize(200, 40);
-        thongBao.setLocation(300, 360);
+        thongBao.setLocation(300, 420);
         add(thongBao);
 
         // Nút tạo dữ liệu
         JButton taoDuLieuButton = new JButton(tt == null ? "Tạo dữ liệu" : "Cập nhật");
         taoDuLieuButton.setSize(150, 30);
-        taoDuLieuButton.setLocation(325, 400);
+        taoDuLieuButton.setLocation(325, 460);
         taoDuLieuButton.addActionListener((ActionEvent e) -> {
             String _hoTen = hoTenField.getText();
             String _pin = pinField.getText();
             long _soTien = ((Number) soTienField.getValue()).longValue();
+            String _soDienThoai = soDienThoaiField.getText();
+            String _maSoPhong = maSoPhongField.getText();
+            String _namSinh = namSinhField.getText();
 
             // Kiểm tra dữ liệu
             if (_hoTen.equals("")) {
@@ -335,6 +364,11 @@ public class NaAppScreen extends JFrame {
             if (_pin.equals("")) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText("Mã PIN không được để trống");
+                return;
+            }
+            if (_pin.length() != ThongTin.doDaiPin) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("Mã PIN phải có 6 ký tự");
                 return;
             }
             if (_soTien < 0) {
@@ -352,12 +386,19 @@ public class NaAppScreen extends JFrame {
                     ThongTin _tt = new ThongTin(_hoTen);
                     _tt.avatar = tempAvatar;
                     _tt.soTien = _soTien;
+                    _tt.namSinh = _namSinh;
+                    _tt.maSoPhong = _maSoPhong;
+                    _tt.soDienThoai = _soDienThoai;
+
                     NaAPDU.taoDuLieu(_tt, _pin);
                     manHinhNhapMaPin("Tạo dữ liệu thành công");
                 } else {
                     ThongTin _tt = new ThongTin(_hoTen, tt.id);
                     _tt.avatar = tempAvatar;
                     _tt.soTien = _soTien;
+                    _tt.namSinh = _namSinh;
+                    _tt.maSoPhong = _maSoPhong;
+                    _tt.soDienThoai = _soDienThoai;
                     NaAPDU.capNhatDuLieu(_tt, _pin);
                     manHinhXemDuLieu("Cập nhật dữ liệu thành công");
                 }
@@ -371,7 +412,7 @@ public class NaAppScreen extends JFrame {
         // Nút quay lại
         JButton quayLaiButton = new JButton("Quay lại");
         quayLaiButton.setSize(150, 30);
-        quayLaiButton.setLocation(325, 430);
+        quayLaiButton.setLocation(325, 490);
         quayLaiButton.addActionListener((ActionEvent e) -> {
             if (tt == null) {
                 manHinhYeuCauTaoDuLieuChoThe();
@@ -386,6 +427,9 @@ public class NaAppScreen extends JFrame {
         if (tt != null) {
             hoTenField.setText(tt.hoTen);
             soTienField.setValue(tt.soTien);
+            maSoPhongField.setText(tt.maSoPhong);
+            namSinhField.setText(tt.namSinh);
+            soDienThoaiField.setText(tt.soDienThoai);
             // Lấy dữ liệu hình ảnh (nếu có)
             if (tt.avatar != null) {
                 try {
@@ -399,7 +443,12 @@ public class NaAppScreen extends JFrame {
         } else {
             hoTenField.setText("");
             soTienField.setValue(0);
+            maSoPhongField.setText("");
+            namSinhField.setText("");
+            soDienThoaiField.setText("");
         }
+        
+        // Kiếm tra mã PIN, đưa dữ liệu vào nếu tồn tại
         if (the.pin != null) {
             pinField.setText(the.pin);
         } else {
@@ -415,58 +464,88 @@ public class NaAppScreen extends JFrame {
         // Tiêu đề
         JLabel tieuDe = new JLabel("Thông tin chủ thẻ", JLabel.CENTER);
         tieuDe.setSize(400, 40);
-        tieuDe.setLocation(200, 50);
+        tieuDe.setLocation(200, 30);
         tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD));
         add(tieuDe);
 
         // ID
         JLabel idLabel = new JLabel("Mã chủ thẻ");
         idLabel.setSize(200, 40);
-        idLabel.setLocation(300, 100);
+        idLabel.setLocation(300, 60);
         add(idLabel);
         JLabel idField = new JLabel(the.thongTin.id);
         idField.setSize(200, 30);
-        idField.setLocation(300, 130);
+        idField.setLocation(300, 85);
         add(idField);
 
         // Họ và tên
         JLabel hoVaTenLabel = new JLabel("Họ và tên");
         hoVaTenLabel.setSize(200, 40);
-        hoVaTenLabel.setLocation(300, 160);
+        hoVaTenLabel.setLocation(300, 120);
         add(hoVaTenLabel);
         JLabel hoTenField = new JLabel(the.thongTin.hoTen);
         hoTenField.setSize(200, 30);
-        hoTenField.setLocation(300, 190);
+        hoTenField.setLocation(300, 145);
         add(hoTenField);
 
         // Số tiền
         JLabel soTienLabel = new JLabel("Số tiền còn lại trong thẻ");
         soTienLabel.setSize(200, 40);
-        soTienLabel.setLocation(300, 220);
+        soTienLabel.setLocation(300, 180);
         add(soTienLabel);
         JLabel soTienField = new JLabel(NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(the.thongTin.soTien));
         soTienField.setSize(200, 30);
-        soTienField.setLocation(300, 250);
+        soTienField.setLocation(300, 205);
         add(soTienField);
-
-        // Hình đại diện
-        JLabel avatarLabel = new JLabel("Hình đại diện");
-        avatarLabel.setSize(200, 40);
-        avatarLabel.setLocation(530, 100);
-        add(avatarLabel);
+        
+        // Năm sinh
+        JLabel namSinhLabel = new JLabel("Năm sinh");
+        namSinhLabel.setSize(200, 40);
+        namSinhLabel.setLocation(300, 240);
+        add(namSinhLabel);
+        JLabel namSinhField = new JLabel(the.thongTin.namSinh);
+        namSinhField.setSize(200, 30);
+        namSinhField.setLocation(300, 265);
+        add(namSinhField);
+        
+        // Mã số phòng
+        JLabel soPhongLabel = new JLabel("Mã số phòng");
+        soPhongLabel.setSize(200, 40);
+        soPhongLabel.setLocation(300, 300);
+        add(soPhongLabel);
+        JLabel soPhongField = new JLabel(the.thongTin.maSoPhong);
+        soPhongField.setSize(200, 30);
+        soPhongField.setLocation(300, 325);
+        add(soPhongField);
+        
+        // Số điện thoại
+        JLabel soDienThoaiLabel = new JLabel("Số điện thoại");
+        soDienThoaiLabel.setSize(200, 40);
+        soDienThoaiLabel.setLocation(300, 360);
+        add(soDienThoaiLabel);
+        JLabel soDienThoaiField = new JLabel(the.thongTin.soDienThoai);
+        soDienThoaiField.setSize(200, 30);
+        soDienThoaiField.setLocation(300, 385);
+        add(soDienThoaiField);
 
         // Thông báo
         JLabel thongBao = new JLabel(_thongBao != null ? _thongBao : "", JLabel.CENTER);
         thongBao.setForeground(Color.blue);
         thongBao.setSize(200, 40);
-        thongBao.setLocation(300, 360);
+        thongBao.setLocation(300, 420);
         add(thongBao);
+        
+        // Hình đại diện
+        JLabel avatarLabel = new JLabel("Hình đại diện");
+        avatarLabel.setSize(200, 40);
+        avatarLabel.setLocation(530, 60);
+        add(avatarLabel);
 
         // Dữ liệu cho hình đại diện
         if (the.thongTin.avatar != null) {
             JPanel avatarPreviewImagePanel = new JPanel();
             avatarPreviewImagePanel.setSize(200, 400);
-            avatarPreviewImagePanel.setLocation(530, 130);
+            avatarPreviewImagePanel.setLocation(530, 90);
             add(avatarPreviewImagePanel);
             try {
                 // Lấy thông tin hình ảnh
@@ -506,30 +585,17 @@ public class NaAppScreen extends JFrame {
         // Nút cập nhật dữ liệu
         JButton capNhatDuLieuButton = new JButton("Cập nhật dữ liệu");
         capNhatDuLieuButton.setSize(150, 30);
-        capNhatDuLieuButton.setLocation(325, 400);
+        capNhatDuLieuButton.setLocation(325, 460);
         capNhatDuLieuButton.addActionListener((ActionEvent e) -> {
             manHinhTaoDuLieu(the.thongTin);
         });
         add(capNhatDuLieuButton);
 
-        JPanel avatarPreviewImagePanel = new JPanel();
-        avatarPreviewImagePanel.setSize(200, 400);
-        avatarPreviewImagePanel.setLocation(530, 130);
-        try {
-            ImageIcon avatarImageIcon = new ImageIcon(ImageIO.read(new ByteArrayInputStream(the.thongTin.avatar)));
-            JLabel avatarPreviewImage = new JLabel(avatarImageIcon);
-            avatarPreviewImagePanel.add(avatarPreviewImage);
-        } catch (IOException ex) {
-            thongBao.setForeground(Color.red);
-            thongBao.setText("Có lỗi xảy ra khi lấy dữ liệu hình ảnh");
-        }
-        add(avatarPreviewImagePanel);
-
         themNutHuyKetNoiThe();
 
         JButton xoaDuLieuButton = new JButton("Xoá dữ liệu");
         xoaDuLieuButton.setSize(150, 30);
-        xoaDuLieuButton.setLocation(325, 430);
+        xoaDuLieuButton.setLocation(325, 490);
         xoaDuLieuButton.addActionListener((ActionEvent e) -> {
             int input = JOptionPane.showConfirmDialog(null,
                     "Xoá toàn bộ dữ liệu trên thẻ?", "Xác nhận",
