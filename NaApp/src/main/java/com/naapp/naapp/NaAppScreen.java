@@ -1006,7 +1006,7 @@ public class NaAppScreen extends JFrame {
                                 break;
                         }
                     }
-                    String _ngayHenHanLabel = the.thongTin.hanGuiXe.format(DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy")) + ".";
+                    String _ngayHenHanLabel = the.thongTin.hanGuiXe.format(DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy"));
                     throw new Exception("Thẻ đã được thanh toán phí gửi xe. Gói gửi xe: " + goiGuiXeLabel + "Ngày hết hạn: " + _ngayHenHanLabel);
                 }
 
