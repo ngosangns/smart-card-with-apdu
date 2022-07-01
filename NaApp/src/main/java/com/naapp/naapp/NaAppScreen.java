@@ -263,7 +263,7 @@ public class NaAppScreen extends JFrame {
                             manHinhNapTien();
                             break;
                         case "cap_nhat_ma_pin":
-                            manHinhCapNhatMaPIN(null);
+                            manHinhCapNhatMaPIN();
                             break;
                         default:
                             manHinhXemDuLieu(null);
@@ -477,6 +477,7 @@ public class NaAppScreen extends JFrame {
             if (_soTien < 0) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText("Số tiền không được bỏ trống hoặc nhỏ hơn 0");
+                return;
             }
             if (tempAvatar == null || tempAvatar.length == 0) {
                 thongBao.setForeground(Color.red);
@@ -561,7 +562,7 @@ public class NaAppScreen extends JFrame {
         veLai();
     }
     
-    public void manHinhCapNhatMaPIN(ThongTin tt) {
+    public void manHinhCapNhatMaPIN() {
         xoaManHinh();
 
         // Tiêu đề
@@ -825,6 +826,8 @@ public class NaAppScreen extends JFrame {
     }
     
     public void manHinhNapTien() {
+        xoaManHinh();
+        
         // Tiêu đề
         JLabel tieuDe = new JLabel("Nạp tiền vào thẻ", JLabel.CENTER);
         tieuDe.setSize(400, 40);
@@ -835,12 +838,61 @@ public class NaAppScreen extends JFrame {
         // Số tiền
         JLabel soTienLabel = new JLabel("Số tiền còn lại trong thẻ");
         soTienLabel.setSize(200, 40);
-        soTienLabel.setLocation(300, 180);
+        soTienLabel.setLocation(300, 60);
         add(soTienLabel);
         JLabel soTienField = new JLabel(NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(the.thongTin.soTien));
         soTienField.setSize(200, 30);
-        soTienField.setLocation(300, 205);
+        soTienField.setLocation(300, 90);
         add(soTienField);
+        
+        // Số tiền
+        JLabel soTienCanNapLabel = new JLabel("Số tiền cần nạp");
+        soTienCanNapLabel.setSize(200, 40);
+        soTienCanNapLabel.setLocation(300, 120);
+        add(soTienCanNapLabel);
+        JFormattedTextField soTienCanNapField = new JFormattedTextField(NumberFormat.getNumberInstance());
+        soTienCanNapField.setSize(200, 30);
+        soTienCanNapField.setLocation(300, 150);
+        soTienCanNapField.setValue(0);
+        add(soTienCanNapField);
+        
+        // Thông báo
+        JLabel thongBao = new JLabel("", JLabel.CENTER);
+        thongBao.setSize(200, 40);
+        thongBao.setLocation(300, 180);
+        add(thongBao);
+
+        // Nút cập nhật PIN
+        JButton capNhatPINButton = new JButton("Nạp tiền");
+        capNhatPINButton.setSize(150, 30);
+        capNhatPINButton.setLocation(325, 220);
+        capNhatPINButton.addActionListener((ActionEvent e) -> {
+            long _soTien = ((Number) soTienCanNapField.getValue()).longValue();
+            
+            // Kiểm tra dữ liệu
+            if (_soTien < 50000) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("Số tiền nạp ít nhất 50.000 đồng");
+                return;
+            }
+            
+            try {
+                ThongTin _tt = new ThongTin(the.thongTin);
+                _tt.soTien += _soTien;
+                NaAPDU.capNhatDuLieu(_tt, the.pin);
+                NaAPDU.dongKetNoi();
+                the = null;
+                manHinhKetNoiDenThe("Nạp tiền thành công");
+            } catch (Exception ex) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText(ex.getMessage());
+            }
+        });
+        add(capNhatPINButton);
+        
+        themNutHuyKetNoiThe();
+        
+        veLai();
     }
 
     // Hàm hỗ trợ --------------------------------------------------------------

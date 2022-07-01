@@ -207,7 +207,7 @@ public class NaAPDU {
                 }
             }
         } else {
-            throw new Exception("Lỗi trạng thái hoặc mã PIN không đúng");
+            throw new Exception("Lỗi xảy ra hoặc mã PIN sai");
         }
     }
 
