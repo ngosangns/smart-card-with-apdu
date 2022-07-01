@@ -60,28 +60,17 @@ public class NaAppScreen extends JFrame {
     }
 
     // Màn hình ----------------------------------------------------------------
-    public void manHinhKetNoiDenThe() {
+    public void manHinhKetNoiDenThe(String _thongBao) {
         xoaManHinh();
-
-        JButton b = new JButton("(Admin) Kết nối đến thẻ");
-        b.setBounds(250, 280, 300, 40);
-        b.addActionListener((ActionEvent e) -> {
-            try {
-                NaAPDU.ketNoiThe(QuanLyThe.AID);
-                the = NaAPDU.theDangKetNoi;
-                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
-                    manHinhNhapMaPin(null);
-                } else {
-                    manHinhYeuCauTaoDuLieuChoThe();
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
-            }
-        });
-        add(b);
+        
+        JLabel tieuDe2 = new JLabel("CHỦ THẺ", JLabel.CENTER);
+        tieuDe2.setFont(new Font("sans-serif", Font.PLAIN, 20));
+        tieuDe2.setSize(300, 40);
+        tieuDe2.setLocation(250, 80);
+        add(tieuDe2);
 
         JButton b1 = new JButton("Xác thực thẻ vào thang máy/toà nhà");
-        b1.setBounds(250, 230, 300, 40);
+        b1.setBounds(85, 150, 300, 40);
         b1.addActionListener((ActionEvent e) -> {
             try {
                 NaAPDU.ketNoiThe(QuanLyThe.AID);
@@ -102,7 +91,7 @@ public class NaAppScreen extends JFrame {
         add(b1);
 
         JButton b2 = new JButton("Thanh toán phí gửi xe tháng (200.000 đồng)");
-        b2.setBounds(250, 330, 300, 40);
+        b2.setBounds(85, 200, 300, 40);
         b2.addActionListener((ActionEvent e) -> {
             long phiGuiXe = 200 * 1000;
             try {
@@ -129,11 +118,113 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(b2);
+        
+        JButton b3 = new JButton("Xác thực vào hầm gửi xe");
+        b3.setBounds(415, 150, 300, 40);
+        b3.addActionListener((ActionEvent e) -> {
+            try {
+                NaAPDU.ketNoiThe(QuanLyThe.AID);
+                the = NaAPDU.theDangKetNoi;
+                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
+                    manHinhNhapMaPin(null, null);
+                } else {
+                    throw new Exception("Xác thực thất bại: Thẻ không có dữ liệu");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+            } finally {
+                NaAPDU.dongKetNoi();
+                the = null;
+            }
+        });
+        add(b3);
+        
+        JButton b4 = new JButton("Nạp tiền");
+        b4.setBounds(415, 200, 300, 40);
+        b4.addActionListener((ActionEvent e) -> {
+            try {
+                NaAPDU.ketNoiThe(QuanLyThe.AID);
+                the = NaAPDU.theDangKetNoi;
+                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
+                    manHinhNhapMaPin(null, "nap_tien");
+                } else {
+                    throw new Exception("Thẻ chưa có dữ liệu. Vui lòng liên hệ quản lý toà nhà để tạo thông tin cho thẻ");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+                NaAPDU.dongKetNoi();
+                the = null;
+            }
+        });
+        add(b4);
+        
+        JButton b5 = new JButton("Thay đổi mã PIN");
+        b5.setBounds(415, 250, 300, 40);
+        b5.addActionListener((ActionEvent e) -> {
+            try {
+                NaAPDU.ketNoiThe(QuanLyThe.AID);
+                the = NaAPDU.theDangKetNoi;
+                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
+                    manHinhNhapMaPin(null, "cap_nhat_ma_pin");
+                } else {
+                    throw new Exception("Thẻ chưa có dữ liệu. Vui lòng liên hệ quản lý toà nhà để tạo thông tin cho thẻ");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+                NaAPDU.dongKetNoi();
+                the = null;
+            }
+        });
+        add(b5);
+        
+        JLabel tieuDe = new JLabel("ADMIN", JLabel.CENTER);
+        tieuDe.setFont(new Font("sans-serif", Font.PLAIN, 20));
+        tieuDe.setSize(300, 40);
+        tieuDe.setLocation(250, 330);
+        add(tieuDe);
+        
+        JButton b = new JButton("Tạo/Cập nhật thông tin thẻ");
+        b.setBounds(85, 400, 300, 40);
+        b.addActionListener((ActionEvent e) -> {
+            try {
+                NaAPDU.ketNoiThe(QuanLyThe.AID);
+                the = NaAPDU.theDangKetNoi;
+                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
+                    manHinhNhapMaPin(null, null);
+                } else {
+                    manHinhYeuCauTaoDuLieuChoThe();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+                NaAPDU.dongKetNoi();
+                the = null;
+            }
+        });
+        add(b);
+        
+        JButton adminMoKhoaTheButton = new JButton("Mở khoá thẻ");
+        adminMoKhoaTheButton.setBounds(415, 400, 300, 40);
+        adminMoKhoaTheButton.addActionListener((ActionEvent e) -> {
+            try {
+                NaAPDU.ketNoiThe(QuanLyThe.AID);
+                NaAPDU.adminMoKhoaThe();
+                JOptionPane.showMessageDialog(null, new JLabel("Đã mở khoá thẻ", JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
+            } finally {
+                NaAPDU.dongKetNoi();
+                the = null;
+            }
+        });
+        add(adminMoKhoaTheButton);
+        
+        if(_thongBao != null && _thongBao.length() > 0)
+            JOptionPane.showMessageDialog(null, new JLabel(_thongBao, JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
 
         veLai();
     }
 
-    public void manHinhNhapMaPin(String _thongBao) {
+    public void manHinhNhapMaPin(String _thongBao, String manHinhTiepTheo) {
         xoaManHinh();
 
         JLabel tieuDe = new JLabel("Nhập mã pin");
@@ -166,7 +257,20 @@ public class NaAppScreen extends JFrame {
             String pin = pinField.getText();
             try {
                 NaAPDU.dangNhap(pin);
-                manHinhXemDuLieu(null);
+                if(manHinhTiepTheo != null) {
+                    switch(manHinhTiepTheo) {
+                        case "nap_tien":
+                            manHinhNapTien();
+                            break;
+                        case "cap_nhat_ma_pin":
+                            manHinhCapNhatMaPIN(null);
+                            break;
+                        default:
+                            manHinhXemDuLieu(null);
+                    }
+                } else {
+                    manHinhXemDuLieu(null);
+                }
             } catch (Exception ex) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText(ex.getMessage());
@@ -175,7 +279,6 @@ public class NaAppScreen extends JFrame {
         add(dangNhapButton);
 
         themNutHuyKetNoiThe();
-        themNutAdminMoKhoaThe();
 
         if (_thongBao != null) {
             thongBao.setForeground(Color.blue);
@@ -391,7 +494,7 @@ public class NaAppScreen extends JFrame {
                     _tt.soDienThoai = _soDienThoai;
 
                     NaAPDU.taoDuLieu(_tt, _pin);
-                    manHinhNhapMaPin("Tạo dữ liệu thành công");
+                    manHinhNhapMaPin("Tạo dữ liệu thành công", null);
                 } else {
                     ThongTin _tt = new ThongTin(_hoTen, tt.id);
                     _tt.avatar = tempAvatar;
@@ -454,6 +557,113 @@ public class NaAppScreen extends JFrame {
         } else {
             pinField.setText("");
         }
+
+        veLai();
+    }
+    
+    public void manHinhCapNhatMaPIN(ThongTin tt) {
+        xoaManHinh();
+
+        // Tiêu đề
+        JLabel tieuDe = new JLabel("Nhập mã PIN mới cho thẻ", JLabel.CENTER);
+        tieuDe.setSize(400, 40);
+        tieuDe.setLocation(200, 30);
+        tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD));
+        add(tieuDe);
+
+        // Mã PIN mới
+        JLabel pinLabel = new JLabel("Nhập mã PIN mới");
+        pinLabel.setSize(200, 40);
+        pinLabel.setLocation(300, 60);
+        add(pinLabel);
+        JTextField pinField = new JPasswordField();
+        pinField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (pinField.getText().length() >= ThongTin.doDaiPin) // limit to `boiSoAES` characters
+                {
+                    e.consume();
+                }
+            }
+        });
+        pinField.setSize(200, 30);
+        pinField.setLocation(300, 90);
+        add(pinField);
+        
+        // Xác nhận mã PIN mới
+        JLabel xacNhanPinLabel = new JLabel("Xác nhận mã PIN mới");
+        xacNhanPinLabel.setSize(200, 40);
+        xacNhanPinLabel.setLocation(300, 120);
+        add(xacNhanPinLabel);
+        JTextField xacNhanPinField = new JPasswordField();
+        xacNhanPinField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (xacNhanPinField.getText().length() >= ThongTin.doDaiPin) // limit to `boiSoAES` characters
+                {
+                    e.consume();
+                }
+            }
+        });
+        xacNhanPinField.setSize(200, 30);
+        xacNhanPinField.setLocation(300, 150);
+        add(xacNhanPinField);
+        
+        // Thông báo
+        JLabel thongBao = new JLabel("", JLabel.CENTER);
+        thongBao.setSize(200, 40);
+        thongBao.setLocation(300, 180);
+        add(thongBao);
+
+        // Nút cập nhật PIN
+        JButton capNhatPINButton = new JButton("Cập nhật mã PIN");
+        capNhatPINButton.setSize(150, 30);
+        capNhatPINButton.setLocation(325, 220);
+        capNhatPINButton.addActionListener((ActionEvent e) -> {
+            String _pin = pinField.getText();
+            String _xacNhanPin = xacNhanPinField.getText();
+            
+            // Kiểm tra dữ liệu
+            if (_pin.equals("")) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("PIN mới không được để trống");
+                return;
+            }
+            if (_xacNhanPin.equals("")) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("PIN xác nhận không được để trống");
+                return;
+            }
+            if (_pin.length() != ThongTin.doDaiPin) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("PIN mới phải có 6 ký tự");
+                return;
+            }
+            if (_xacNhanPin.length() != ThongTin.doDaiPin) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("PIN xác nhận phải có 6 ký tự");
+                return;
+            }
+            if(!_pin.equals(_xacNhanPin)) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText("PIN xác nhận không đúng");
+                return;
+            }
+            
+            try {
+                ThongTin _tt = new ThongTin(the.thongTin);
+                NaAPDU.capNhatDuLieu(_tt, _pin);
+                NaAPDU.dongKetNoi();
+                the = null;
+                manHinhKetNoiDenThe("Cập nhật mã PIN thành công");
+            } catch (Exception ex) {
+                thongBao.setForeground(Color.red);
+                thongBao.setText(ex.getMessage());
+            }
+        });
+        add(capNhatPINButton);
+        
+        themNutHuyKetNoiThe();
 
         veLai();
     }
@@ -613,6 +823,25 @@ public class NaAppScreen extends JFrame {
 
         veLai();
     }
+    
+    public void manHinhNapTien() {
+        // Tiêu đề
+        JLabel tieuDe = new JLabel("Nạp tiền vào thẻ", JLabel.CENTER);
+        tieuDe.setSize(400, 40);
+        tieuDe.setLocation(200, 30);
+        tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD));
+        add(tieuDe);
+        
+        // Số tiền
+        JLabel soTienLabel = new JLabel("Số tiền còn lại trong thẻ");
+        soTienLabel.setSize(200, 40);
+        soTienLabel.setLocation(300, 180);
+        add(soTienLabel);
+        JLabel soTienField = new JLabel(NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(the.thongTin.soTien));
+        soTienField.setSize(200, 30);
+        soTienField.setLocation(300, 205);
+        add(soTienField);
+    }
 
     // Hàm hỗ trợ --------------------------------------------------------------
     private void xoaManHinh() {
@@ -663,28 +892,9 @@ public class NaAppScreen extends JFrame {
         huyKetNoiButton.addActionListener((ActionEvent e) -> {
             NaAPDU.dongKetNoi();
             the = null;
-            manHinhKetNoiDenThe();
+            manHinhKetNoiDenThe(null);
         });
         add(huyKetNoiButton);
-    }
-
-    private void themNutAdminMoKhoaThe() {
-        JLabel moTa = new JLabel("Sử dụng khi thẻ bị khoá", JLabel.CENTER);
-        moTa.setSize(150, 32);
-        moTa.setLocation(635, 495);
-        add(moTa);
-
-        JButton adminMoKhoaTheButton = new JButton("Admin mở khoá thẻ");
-        adminMoKhoaTheButton.setBounds(635, 525, 150, 32);
-        adminMoKhoaTheButton.addActionListener((ActionEvent e) -> {
-            try {
-                NaAPDU.adminMoKhoaThe();
-                JOptionPane.showMessageDialog(null, new JLabel("Đã mở khoá thẻ", JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
-            }
-        });
-        add(adminMoKhoaTheButton);
     }
 
     private BufferedImage scale(BufferedImage img, int targetWidth, int targetHeight) {

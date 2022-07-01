@@ -22,6 +22,6 @@ public class NaApp {
         }
         
         NaAppScreen f = new NaAppScreen();
-        f.manHinhKetNoiDenThe();
+        f.manHinhKetNoiDenThe(null);
     }
 }

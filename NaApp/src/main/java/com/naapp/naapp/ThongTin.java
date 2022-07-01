@@ -24,9 +24,12 @@ public class ThongTin implements Serializable {
     }
     
     public ThongTin(ThongTin tt) {
-        hoTen = tt.hoTen;
         id = tt.id;
+        hoTen = tt.hoTen;
         avatar = tt.avatar;
         soTien = tt.soTien;
+        namSinh = tt.namSinh;
+        maSoPhong = tt.maSoPhong;
+        soDienThoai = tt.soDienThoai;
     }
 }
