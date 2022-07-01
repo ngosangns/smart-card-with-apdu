@@ -16,6 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Locale;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -35,6 +38,8 @@ public class NaAppScreen extends JFrame {
 
     private byte[] tempAvatar;
     private The the;
+    
+    private String thongBaoTheChuaCoDuLieu = "Thẻ chưa có dữ liệu. Vui lòng liên hệ quản lý toà nhà để tạo thông tin cho thẻ";
 
     public NaAppScreen() {
         super();
@@ -62,7 +67,7 @@ public class NaAppScreen extends JFrame {
     // Màn hình ----------------------------------------------------------------
     public void manHinhKetNoiDenThe(String _thongBao) {
         xoaManHinh();
-        
+
         JLabel tieuDe2 = new JLabel("CHỦ THẺ", JLabel.CENTER);
         tieuDe2.setFont(new Font("sans-serif", Font.PLAIN, 20));
         tieuDe2.setSize(300, 40);
@@ -79,7 +84,7 @@ public class NaAppScreen extends JFrame {
                     NaAPDU.xacThucThe();
                     throw new Exception("Đã xác thực! Có thể ra vào thang máy/toà nhà");
                 } else {
-                    throw new Exception("Thẻ không có dữ liệu");
+                    throw new Exception(thongBaoTheChuaCoDuLieu);
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
@@ -90,35 +95,20 @@ public class NaAppScreen extends JFrame {
         });
         add(b1);
 
-        JButton b2 = new JButton("Thanh toán phí gửi xe tháng (200.000 đồng)");
+        JButton b2 = new JButton("Thanh toán phí gửi xe máy theo tháng (200k)");
         b2.setBounds(85, 200, 300, 40);
         b2.addActionListener((ActionEvent e) -> {
-            long phiGuiXe = 200 * 1000;
-            try {
-                NaAPDU.ketNoiThe(QuanLyThe.AID);
-                the = NaAPDU.theDangKetNoi;
-                if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
-                    NaAPDU.xacThucThe();
-                    long soTienConLai = the.thongTin.soTien - phiGuiXe;
-                    if(soTienConLai >= 0) {
-                        ThongTin _tt = new ThongTin(the.thongTin);
-                        _tt.soTien = soTienConLai;
-                        NaAPDU.capNhatDuLieu(_tt, the.pin);
-                        throw new Exception("Đã thanh toán!");
-                    }
-                    throw new Exception("Thẻ không đủ tiền để thanh toán");
-                } else {
-                    throw new Exception("Thẻ không có dữ liệu");
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
-            } finally {
-                NaAPDU.dongKetNoi();
-                the = null;
-            }
+            thanhToanGuiXe("thang");
         });
         add(b2);
-        
+
+        JButton b6 = new JButton("Thanh toán phí gửi xe máy theo quý (500k)");
+        b6.setBounds(85, 250, 300, 40);
+        b6.addActionListener((ActionEvent e) -> {
+            thanhToanGuiXe("quy");
+        });
+        add(b6);
+
         JButton b3 = new JButton("Xác thực vào hầm gửi xe");
         b3.setBounds(415, 150, 300, 40);
         b3.addActionListener((ActionEvent e) -> {
@@ -126,7 +116,11 @@ public class NaAppScreen extends JFrame {
                 NaAPDU.ketNoiThe(QuanLyThe.AID);
                 the = NaAPDU.theDangKetNoi;
                 if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
-                    manHinhNhapMaPin(null, null);
+                    if(the.thongTin.hanGuiXe != null && the.thongTin.hanGuiXe.isAfter(LocalDateTime.now())) {
+                        throw new Exception("Xác thực thành công. Có thẻ vào hầm gửi xe");
+                    } else {
+                        throw new Exception("Xác thực thất bại: Thẻ chưa có gói gửi xe hoặc gói đã hết hạn");
+                    }
                 } else {
                     throw new Exception("Xác thực thất bại: Thẻ không có dữ liệu");
                 }
@@ -138,7 +132,7 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(b3);
-        
+
         JButton b4 = new JButton("Nạp tiền");
         b4.setBounds(415, 200, 300, 40);
         b4.addActionListener((ActionEvent e) -> {
@@ -148,7 +142,7 @@ public class NaAppScreen extends JFrame {
                 if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
                     manHinhNhapMaPin(null, "nap_tien");
                 } else {
-                    throw new Exception("Thẻ chưa có dữ liệu. Vui lòng liên hệ quản lý toà nhà để tạo thông tin cho thẻ");
+                    throw new Exception(thongBaoTheChuaCoDuLieu);
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
@@ -157,7 +151,7 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(b4);
-        
+
         JButton b5 = new JButton("Thay đổi mã PIN");
         b5.setBounds(415, 250, 300, 40);
         b5.addActionListener((ActionEvent e) -> {
@@ -167,7 +161,7 @@ public class NaAppScreen extends JFrame {
                 if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
                     manHinhNhapMaPin(null, "cap_nhat_ma_pin");
                 } else {
-                    throw new Exception("Thẻ chưa có dữ liệu. Vui lòng liên hệ quản lý toà nhà để tạo thông tin cho thẻ");
+                    throw new Exception(thongBaoTheChuaCoDuLieu);
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Lỗi", JOptionPane.PLAIN_MESSAGE);
@@ -176,13 +170,13 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(b5);
-        
-        JLabel tieuDe = new JLabel("ADMIN", JLabel.CENTER);
+
+        JLabel tieuDe = new JLabel("BAN QUẢN LÝ TOÀ NHÀ", JLabel.CENTER);
         tieuDe.setFont(new Font("sans-serif", Font.PLAIN, 20));
         tieuDe.setSize(300, 40);
         tieuDe.setLocation(250, 330);
         add(tieuDe);
-        
+
         JButton b = new JButton("Tạo/Cập nhật thông tin thẻ");
         b.setBounds(85, 400, 300, 40);
         b.addActionListener((ActionEvent e) -> {
@@ -201,7 +195,7 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(b);
-        
+
         JButton adminMoKhoaTheButton = new JButton("Mở khoá thẻ");
         adminMoKhoaTheButton.setBounds(415, 400, 300, 40);
         adminMoKhoaTheButton.addActionListener((ActionEvent e) -> {
@@ -217,9 +211,10 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(adminMoKhoaTheButton);
-        
-        if(_thongBao != null && _thongBao.length() > 0)
+
+        if (_thongBao != null && _thongBao.length() > 0) {
             JOptionPane.showMessageDialog(null, new JLabel(_thongBao, JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
+        }
 
         veLai();
     }
@@ -257,8 +252,8 @@ public class NaAppScreen extends JFrame {
             String pin = pinField.getText();
             try {
                 NaAPDU.dangNhap(pin);
-                if(manHinhTiepTheo != null) {
-                    switch(manHinhTiepTheo) {
+                if (manHinhTiepTheo != null) {
+                    switch (manHinhTiepTheo) {
                         case "nap_tien":
                             manHinhNapTien();
                             break;
@@ -358,7 +353,7 @@ public class NaAppScreen extends JFrame {
         soTienField.setLocation(300, 210);
         soTienField.setValue(0);
         add(soTienField);
-        
+
         // Năm sinh
         JLabel namSinhLabel = new JLabel("Năm sinh");
         namSinhLabel.setSize(200, 40);
@@ -368,7 +363,7 @@ public class NaAppScreen extends JFrame {
         namSinhField.setSize(200, 30);
         namSinhField.setLocation(300, 270);
         add(namSinhField);
-        
+
         // Số phòng
         JLabel maSoPhongLabel = new JLabel("Mã số phòng");
         maSoPhongLabel.setSize(200, 40);
@@ -378,7 +373,7 @@ public class NaAppScreen extends JFrame {
         maSoPhongField.setSize(200, 30);
         maSoPhongField.setLocation(300, 330);
         add(maSoPhongField);
-        
+
         // Số điện thoại
         JLabel soDienThoaiLabel = new JLabel("Số điện thoại");
         soDienThoaiLabel.setSize(200, 40);
@@ -551,7 +546,7 @@ public class NaAppScreen extends JFrame {
             namSinhField.setText("");
             soDienThoaiField.setText("");
         }
-        
+
         // Kiếm tra mã PIN, đưa dữ liệu vào nếu tồn tại
         if (the.pin != null) {
             pinField.setText(the.pin);
@@ -561,7 +556,7 @@ public class NaAppScreen extends JFrame {
 
         veLai();
     }
-    
+
     public void manHinhCapNhatMaPIN() {
         xoaManHinh();
 
@@ -590,7 +585,7 @@ public class NaAppScreen extends JFrame {
         pinField.setSize(200, 30);
         pinField.setLocation(300, 90);
         add(pinField);
-        
+
         // Xác nhận mã PIN mới
         JLabel xacNhanPinLabel = new JLabel("Xác nhận mã PIN mới");
         xacNhanPinLabel.setSize(200, 40);
@@ -609,7 +604,7 @@ public class NaAppScreen extends JFrame {
         xacNhanPinField.setSize(200, 30);
         xacNhanPinField.setLocation(300, 150);
         add(xacNhanPinField);
-        
+
         // Thông báo
         JLabel thongBao = new JLabel("", JLabel.CENTER);
         thongBao.setSize(200, 40);
@@ -623,7 +618,7 @@ public class NaAppScreen extends JFrame {
         capNhatPINButton.addActionListener((ActionEvent e) -> {
             String _pin = pinField.getText();
             String _xacNhanPin = xacNhanPinField.getText();
-            
+
             // Kiểm tra dữ liệu
             if (_pin.equals("")) {
                 thongBao.setForeground(Color.red);
@@ -645,12 +640,12 @@ public class NaAppScreen extends JFrame {
                 thongBao.setText("PIN xác nhận phải có 6 ký tự");
                 return;
             }
-            if(!_pin.equals(_xacNhanPin)) {
+            if (!_pin.equals(_xacNhanPin)) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText("PIN xác nhận không đúng");
                 return;
             }
-            
+
             try {
                 ThongTin _tt = new ThongTin(the.thongTin);
                 NaAPDU.capNhatDuLieu(_tt, _pin);
@@ -663,7 +658,7 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(capNhatPINButton);
-        
+
         themNutHuyKetNoiThe();
 
         veLai();
@@ -708,7 +703,7 @@ public class NaAppScreen extends JFrame {
         soTienField.setSize(200, 30);
         soTienField.setLocation(300, 205);
         add(soTienField);
-        
+
         // Năm sinh
         JLabel namSinhLabel = new JLabel("Năm sinh");
         namSinhLabel.setSize(200, 40);
@@ -718,7 +713,7 @@ public class NaAppScreen extends JFrame {
         namSinhField.setSize(200, 30);
         namSinhField.setLocation(300, 265);
         add(namSinhField);
-        
+
         // Mã số phòng
         JLabel soPhongLabel = new JLabel("Mã số phòng");
         soPhongLabel.setSize(200, 40);
@@ -728,7 +723,7 @@ public class NaAppScreen extends JFrame {
         soPhongField.setSize(200, 30);
         soPhongField.setLocation(300, 325);
         add(soPhongField);
-        
+
         // Số điện thoại
         JLabel soDienThoaiLabel = new JLabel("Số điện thoại");
         soDienThoaiLabel.setSize(200, 40);
@@ -745,7 +740,7 @@ public class NaAppScreen extends JFrame {
         thongBao.setSize(200, 40);
         thongBao.setLocation(300, 420);
         add(thongBao);
-        
+
         // Hình đại diện
         JLabel avatarLabel = new JLabel("Hình đại diện");
         avatarLabel.setSize(200, 40);
@@ -824,17 +819,17 @@ public class NaAppScreen extends JFrame {
 
         veLai();
     }
-    
+
     public void manHinhNapTien() {
         xoaManHinh();
-        
+
         // Tiêu đề
         JLabel tieuDe = new JLabel("Nạp tiền vào thẻ", JLabel.CENTER);
         tieuDe.setSize(400, 40);
         tieuDe.setLocation(200, 30);
         tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD));
         add(tieuDe);
-        
+
         // Số tiền
         JLabel soTienLabel = new JLabel("Số tiền còn lại trong thẻ");
         soTienLabel.setSize(200, 40);
@@ -844,7 +839,7 @@ public class NaAppScreen extends JFrame {
         soTienField.setSize(200, 30);
         soTienField.setLocation(300, 90);
         add(soTienField);
-        
+
         // Số tiền
         JLabel soTienCanNapLabel = new JLabel("Số tiền cần nạp");
         soTienCanNapLabel.setSize(200, 40);
@@ -855,7 +850,7 @@ public class NaAppScreen extends JFrame {
         soTienCanNapField.setLocation(300, 150);
         soTienCanNapField.setValue(0);
         add(soTienCanNapField);
-        
+
         // Thông báo
         JLabel thongBao = new JLabel("", JLabel.CENTER);
         thongBao.setSize(200, 40);
@@ -868,14 +863,14 @@ public class NaAppScreen extends JFrame {
         capNhatPINButton.setLocation(325, 220);
         capNhatPINButton.addActionListener((ActionEvent e) -> {
             long _soTien = ((Number) soTienCanNapField.getValue()).longValue();
-            
+
             // Kiểm tra dữ liệu
             if (_soTien < 50000) {
                 thongBao.setForeground(Color.red);
                 thongBao.setText("Số tiền nạp ít nhất 50.000 đồng");
                 return;
             }
-            
+
             try {
                 ThongTin _tt = new ThongTin(the.thongTin);
                 _tt.soTien += _soTien;
@@ -889,9 +884,9 @@ public class NaAppScreen extends JFrame {
             }
         });
         add(capNhatPINButton);
-        
+
         themNutHuyKetNoiThe();
-        
+
         veLai();
     }
 
@@ -989,6 +984,73 @@ public class NaAppScreen extends JFrame {
             ret = scratchImage;
         }
         return ret;
+    }
 
+    private void thanhToanGuiXe(String _goiGuiXe) {
+        try {
+            NaAPDU.ketNoiThe(QuanLyThe.AID);
+            the = NaAPDU.theDangKetNoi;
+            if (NaAPDU.kiemTraTonTaiDuLieuTrongThe()) {
+                NaAPDU.xacThucThe();
+
+                // Kiểm tra đã thanh toán chưa
+                if (the.thongTin.hanGuiXe != null && the.thongTin.hanGuiXe.isAfter(LocalDateTime.now())) {
+                    String goiGuiXeLabel = "Không có. ";
+                    if(the.thongTin.goiGuiXe != null) {
+                        switch (the.thongTin.goiGuiXe) {
+                            case "thang":
+                                goiGuiXeLabel = "Tháng. ";
+                                break;
+                            case "quy":
+                                goiGuiXeLabel = "Quý. ";
+                                break;
+                        }
+                    }
+                    String _ngayHenHanLabel = the.thongTin.hanGuiXe.format(DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy")) + ".";
+                    throw new Exception("Thẻ đã được thanh toán phí gửi xe. Gói gửi xe: " + goiGuiXeLabel + "Ngày hết hạn: " + _ngayHenHanLabel);
+                }
+
+                // Tính toán chi phí và hạn gửi xe
+                long _phiGuiXe;
+                LocalDateTime _hanGuiXe;
+                switch (_goiGuiXe) {
+                    case "thang":
+                        _phiGuiXe = 200 * 1000;
+                        _hanGuiXe = LocalDateTime.now().plusMonths(1);
+                        break;
+                    case "quy":
+                        _phiGuiXe = 500 * 1000;
+                        _hanGuiXe = LocalDateTime.now().plusMonths(3);
+                        break;
+                    default:
+                        _phiGuiXe = 0;
+                        _hanGuiXe = null;
+                }
+                
+                if(_phiGuiXe == 0) {
+                    throw new Exception("Có lỗi xảy ra khi thanh toán");
+                }
+
+                // Kiểm tra số tiền còn lại có đủ thanh toán không
+                long _soTienConLai = the.thongTin.soTien - _phiGuiXe;
+                if (_soTienConLai >= 0) {
+                    // Cập nhật thông tin thanh toán
+                    ThongTin _tt = new ThongTin(the.thongTin);
+                    _tt.soTien = _soTienConLai;
+                    _tt.hanGuiXe = _hanGuiXe;
+                    _tt.goiGuiXe = _goiGuiXe;
+                    NaAPDU.capNhatDuLieu(_tt, the.pin);
+                    throw new Exception("Đã thanh toán!");
+                }
+                throw new Exception("Thẻ không đủ tiền để thanh toán");
+            } else {
+                throw new Exception(thongBaoTheChuaCoDuLieu);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, new JLabel(ex.getMessage(), JLabel.CENTER), "Thông báo", JOptionPane.PLAIN_MESSAGE);
+        } finally {
+            NaAPDU.dongKetNoi();
+            the = null;
+        }
     }
 }

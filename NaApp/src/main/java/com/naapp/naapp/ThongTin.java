@@ -1,6 +1,7 @@
 package com.naapp.naapp;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class ThongTin implements Serializable {
@@ -11,6 +12,8 @@ public class ThongTin implements Serializable {
     public String maSoPhong;
     public String namSinh;
     public String soDienThoai;
+    public LocalDateTime hanGuiXe;
+    public String goiGuiXe; // "thang"/"quy"/null
     
     public static int doDaiPin = 6;
     public ThongTin(String _hoTen) {
@@ -31,5 +34,7 @@ public class ThongTin implements Serializable {
         namSinh = tt.namSinh;
         maSoPhong = tt.maSoPhong;
         soDienThoai = tt.soDienThoai;
+        hanGuiXe = tt.hanGuiXe;
+        goiGuiXe = tt.goiGuiXe;
     }
 }
